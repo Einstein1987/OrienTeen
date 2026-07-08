@@ -166,10 +166,10 @@ function fillCard(domainKey){
 function startMenu(){
   state = 'start';
   pendingDomain = null;
-  addBotMessage("Bonjour ! Je suis là pour t'aider. Comment veux-tu procéder ?", [
-    {label: "Chercher un domaine/métier", action: "set_state", payload: "search_domaine"},
-    {label: "Je connais déjà une formation", action: "set_state", payload: "search_formation"},
-    {label: "Rechercher par Lycée", action: "set_state", payload: "search_etab"},
+  addBotMessage("Bonjour ! Je suis là pour t'aider. Où en es-tu ?", [
+    {label: "Je connais la famille de métiers ou le domaine qui m'intéresse", action: "set_state", payload: "search_domaine"},
+    {label: "Je cherche les lycées qui propose la formation que je souhaite", action: "set_state", payload: "search_formation"},
+    {label: "Je souhaite trouver toutes les formations proposé par le lycée souhaité", action: "set_state", payload: "search_etab"},
     {label: "Je suis perdu (Faire le Quiz)", action: "start_quiz", payload: null}
   ]);
 }
