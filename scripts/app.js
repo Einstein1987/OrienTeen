@@ -270,6 +270,7 @@ function startMenu(){
 }
 
 function askConfirm(domainKey){
+  if(!DOMAINS[domainKey]){ startMenu(); return; }
   state = 'confirm';
   pendingDomain = domainKey;
   addBotMessage(`Il me semble que tu penses à : ${DOMAINS[domainKey].label}. C'est bien ça ?`, [
@@ -280,10 +281,10 @@ function askConfirm(domainKey){
 
 function startQuiz() {
   state = 'quiz_q1';
-  quizScores = { relation_client: 0, sante_social: 0, numerique_energie: 0, construction_batiment: 0, restauration_alimentation: 0, mecanique_maintenance: 0 };
+  quizScores = { relation_client: 0, sante_social: 0, numerique_energie: 0, batiment: 0, restauration: 0, mecanique_auto: 0 };
   addBotMessage("D'accord, procédons par élimination. Préfères-tu :", [
     {label: "Le travail sur ordinateur / au bureau", action: "quiz_answer", payload: ["numerique_energie", "relation_client"]},
-    {label: "Le travail manuel / bouger", action: "quiz_answer", payload: ["construction_batiment", "mecanique_maintenance", "restauration_alimentation", "sante_social"]}
+    {label: "Le travail manuel / bouger", action: "quiz_answer", payload: ["batiment", "mecanique_auto", "restauration", "sante_social"]}
   ]);
 }
 
@@ -294,7 +295,7 @@ function nextQuizStep(answerPayload) {
     state = 'quiz_q2';
     addBotMessage("Question 2 : Aimes-tu être en contact avec le public ou des clients ?", [
       {label: "Oui, j'aime aider ou conseiller les autres", action: "quiz_answer", payload: ["relation_client", "sante_social", "restauration_alimentation"]},
-      {label: "Non, je préfère la technique ou travailler seul/en équipe", action: "quiz_answer", payload: ["numerique_energie", "construction_batiment", "mecanique_maintenance"]}
+      {label: "Non, je préfère la technique ou travailler seul/en équipe", action: "quiz_answer", payload: ["numerique_energie", "batiment", "mecanique_auto"]}
     ]);
   } else if (state === 'quiz_q2') {
     let bestDomain = Object.keys(quizScores).reduce((a, b) => quizScores[a] > quizScores[b] ? a : b);
