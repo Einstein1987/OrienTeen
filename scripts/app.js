@@ -148,7 +148,6 @@ function fillDetails(data) {
     data.formations.forEach(formation => {
         container.appendChild(createFormationBlock(formation));
     });
-    hideGlobalCoefficientsTable();
 }
 
 function createFormationBlock(formation) {
