@@ -1,190 +1,3 @@
-/* ==========================================================================
-   DEBUT DU FICHIER JS
-   BASE DE DONNÉES RESTRUCTUREE (Liaison stricte Formation -> Etablissement)
-========================================================================== */
-const DOMAINS = {
-  relation_client: {
-    label: "Métiers de la Relation Client (Commerce, Vente, Accueil)",
-    keywords: ["commerce", "vente", "vendre", "client", "magasin", "accueil", "boutique", "relation client", "mrc", "mcva", "mcvb", "epc"],
-    coeffs: [6, 5, 4, 5, 3, 3, 4], // FR, MATH, HG, LV, EPS, ARTS, SCI
-    formations: [
-      {
-        nom: "2de Pro Métiers de la Relation Client (MRC)",
-        niveau: "Bac Pro",
-        etablissements: [
-          {nom: "Lycée Robert Doisneau", ville: "Corbeil-Essonnes", transport: "Bus 401 (env. 15 min)"},
-          {nom: "Lycée Charles Baudelaire", ville: "Évry-Courcouronnes", transport: "Bus 401 ou 402 (env. 30 min)"},
-          {nom: "Lycée Pierre Mendès-France", ville: "Ris-Orangis", transport: "RER D ou Bus 402 (env. 45 min)"},
-          {nom: "Lycée Jean Monnet", ville: "Juvisy-sur-Orge", transport: "RER D (env. 45 min)"}
-        ]
-      },
-      {
-        nom: "CAP Équipier Polyvalent du Commerce (EPC)",
-        niveau: "CAP",
-        etablissements: [
-          {nom: "Lycée Charles Baudelaire", ville: "Évry-Courcouronnes", transport: "Bus 401 ou 402 (env. 30 min)"},
-          {nom: "Lycée Pierre Mendès-France", ville: "Ris-Orangis", transport: "RER D ou Bus 402 (env. 45 min)"}
-        ]
-      }
-    ]
-  },
-  sante_social: {
-    label: "Santé, Social et Soins (ASSP, AEPE, AAGA)",
-    keywords: ["sante", "social", "soin", "enfant", "personnes agees", "hopital", "medical", "infirmier", "aide", "assp", "petite enfance", "aepe", "aaga"],
-    coeffs: [5, 4, 3, 3, 4, 4, 7], 
-    formations: [
-      {
-        nom: "Bac Pro Accompagnement, soins et services à la personne (ASSP)",
-        niveau: "Bac Pro",
-        etablissements: [
-          {nom: "Lycée Charles Baudelaire", ville: "Évry-Courcouronnes", transport: "Bus 401 ou 402 (env. 30 min)"},
-          {nom: "Lycée Jean Monnet", ville: "Juvisy-sur-Orge", transport: "RER D (env. 45 min)"},
-          {nom: "Lycée Léonard de Vinci", ville: "Saint-Michel-sur-Orge", transport: "RER D puis Bus (env. 55 min)"}
-        ]
-      },
-      {
-        nom: "CAP Accompagnant Éducatif Petite Enfance (AEPE)",
-        niveau: "CAP",
-        etablissements: [
-          {nom: "Lycée Charles Baudelaire", ville: "Évry-Courcouronnes", transport: "Bus 401 ou 402 (env. 30 min)"}
-        ]
-      },
-      {
-        nom: "CAP Agent Accompagnant au Grand Age (AAGA)",
-        niveau: "CAP",
-        etablissements: [
-          {nom: "Lycée Charles Baudelaire", ville: "Évry-Courcouronnes", transport: "Bus 401 ou 402 (env. 30 min)"},
-          {nom: "Lycée Léonard de Vinci", ville: "Saint-Michel-sur-Orge", transport: "RER D puis Bus (env. 55 min)"}
-        ]
-      }
-    ]
-  },
-  numerique_energie: {
-    label: "Transitions Numérique et Énergétique (Électricité, Info, MELEC)",
-    keywords: ["informatique", "ordinateur", "numerique", "electricite", "electricien", "ciel", "melec", "energie", "code", "technologie", "chauffage", "climatisation"],
-    coeffs: [5, 6, 3, 4, 3, 2, 7], 
-    formations: [
-      {
-        nom: "Bac Pro Cybersécurité, Informatique et Réseaux, Électronique (CIEL)",
-        niveau: "Bac Pro",
-        etablissements: [
-          {nom: "Lycée Georges Brassens", ville: "Évry-Courcouronnes", transport: "Bus 402 (env. 25 min)"}
-        ]
-      },
-      {
-        nom: "Bac Pro Métiers de l'électricité et de ses environnements connectés (MELEC)",
-        niveau: "Bac Pro",
-        etablissements: [
-          {nom: "Lycée Robert Doisneau", ville: "Corbeil-Essonnes", transport: "Bus 401 (env. 15 min)"},
-          {nom: "Lycée Pierre Mendès-France", ville: "Ris-Orangis", transport: "RER D ou Bus 402 (env. 45 min)"}
-        ]
-      },
-      {
-        nom: "CAP Électricien",
-        niveau: "CAP",
-        etablissements: [
-          {nom: "Lycée Robert Doisneau", ville: "Corbeil-Essonnes", transport: "Bus 401 (env. 15 min)"},
-          {nom: "Lycée Pierre Mendès-France", ville: "Ris-Orangis", transport: "RER D ou Bus 402 (env. 45 min)"}
-        ]
-      }
-    ]
-  },
-  construction_batiment: {
-    label: "Métiers du Bâtiment et de la Construction Durable",
-    keywords: ["batiment", "construire", "construction", "menuisier", "menuiserie", "maçon", "travaux", "chantier", "architecture", "peintre", "carreleur"],
-    coeffs: [5, 6, 3, 4, 3, 2, 7],
-    formations: [
-      {
-        nom: "Bac Pro Technicien du Bâtiment (TBORGO)",
-        niveau: "Bac Pro",
-        etablissements: [
-          {nom: "Lycée Auguste Perret", ville: "Évry-Courcouronnes", transport: "Bus 401 (env. 25 min)"},
-          {nom: "Lycée Jean-Pierre Timbaud", ville: "Brétigny-sur-Orge", transport: "RER D puis RER C (env. 60 min)"}
-        ]
-      },
-      {
-        nom: "CAP Maçon",
-        niveau: "CAP",
-        etablissements: [
-          {nom: "Lycée Auguste Perret", ville: "Évry-Courcouronnes", transport: "Bus 401 (env. 25 min)"},
-          {nom: "Lycée Jean-Pierre Timbaud", ville: "Brétigny-sur-Orge", transport: "RER D puis RER C (env. 60 min)"}
-        ]
-      },
-      {
-        nom: "CAP Menuisier Fabricant",
-        niveau: "CAP",
-        etablissements: [
-          {nom: "Lycée Auguste Perret", ville: "Évry-Courcouronnes", transport: "Bus 401 (env. 25 min)"}
-        ]
-      }
-    ]
-  },
-  restauration_alimentation: {
-    label: "Hôtellerie, Restauration et Alimentation",
-    keywords: ["cuisine", "cuisinier", "cuisiniere", "restaurant", "restauration", "chef", "patissier", "patisserie", "boulanger", "manger", "hotellerie"],
-    coeffs: [5, 4, 3, 3, 4, 4, 7],
-    formations: [
-      {
-        nom: "2de Pro Métiers de l'Hôtellerie-Restauration (MHR)",
-        niveau: "Bac Pro",
-        etablissements: [
-          {nom: "Lycée Château des Coudraies", ville: "Étiolles", transport: "Bus 7001 (env. 20 min)"}
-        ]
-      },
-      {
-        nom: "CAP Cuisine",
-        niveau: "CAP",
-        etablissements: [
-          {nom: "Lycée Château des Coudraies", ville: "Étiolles", transport: "Bus 7001 (env. 20 min)"}
-        ]
-      },
-      {
-        nom: "Bac Pro Boulanger-Pâtissier",
-        niveau: "Bac Pro",
-        etablissements: [
-          {nom: "Lycée Château des Coudraies", ville: "Étiolles", transport: "Bus 7001 (env. 20 min)"}
-        ]
-      },
-      {
-        nom: "CAP Pâtissier",
-        niveau: "CAP",
-        etablissements: [
-          {nom: "Lycée Château des Coudraies", ville: "Étiolles", transport: "Bus 7001 (env. 20 min)"}
-        ]
-      }
-    ]
-  },
-  mecanique_maintenance: {
-    label: "Maintenance des Véhicules et Mécanique",
-    keywords: ["voiture", "mecanique", "mecanicien", "auto", "automobile", "garage", "carrosserie", "moteur", "maintenance", "remi"],
-    coeffs: [4, 6, 3, 4, 3, 2, 8],
-    formations: [
-      {
-        nom: "Bac Pro Maintenance des Véhicules (MVA)",
-        niveau: "Bac Pro",
-        etablissements: [
-          {nom: "Lycée Alexandre Denis", ville: "Cerny", transport: "RER D puis Bus (env. 1h10)"}
-        ]
-      },
-      {
-        nom: "CAP Maintenance des Véhicules (Voitures Particulières)",
-        niveau: "CAP",
-        etablissements: [
-          {nom: "Lycée Alexandre Denis", ville: "Cerny", transport: "RER D puis Bus (env. 1h10)"}
-        ]
-      },
-      {
-        nom: "2de Pro Réalisation d'Ensembles Mécaniques et Industriels (REMI)",
-        niveau: "Bac Pro",
-        etablissements: [
-          {nom: "Lycée Robert Doisneau", ville: "Corbeil-Essonnes", transport: "Bus 401 (env. 15 min)"},
-          {nom: "Lycée Georges Brassens", ville: "Évry-Courcouronnes", transport: "Bus 402 (env. 25 min)"}
-        ]
-      }
-    ]
-  }
-};
-
 const YES_WORDS = ["oui", "ouais", "exact", "voila", "c'est ca", "cest ca", "tout a fait", "carrement"];
 const NO_WORDS = ["non", "pas vraiment", "pas trop", "pas exactement"];
 
@@ -192,10 +5,6 @@ function normalize(str){
   return str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
 }
 
-
-/* ==========================================================================
-   MOTEURS DE RECHERCHE LOCAUX
-   ========================================================================== */
 function matchDomains(text){
   const n = normalize(text);
   const matches = [];
@@ -219,7 +28,7 @@ function matchEtablissements(text){
   const n = normalize(text);
   const matches = [];
   for(const key in DOMAINS) {
-    // Vérifier si un des établissements de n'importe quelle formation de ce domaine correspond
+    // On vérifie si l'un des établissements correspond au texte
     let found = DOMAINS[key].formations.some(f => 
        f.etablissements.some(e => normalize(e.nom).includes(n) || n.includes(normalize(e.nom)))
     );
@@ -235,9 +44,6 @@ function matchYesNo(text){
   return null;
 }
 
-/* ==========================================================================
-   LOGIQUE D'ÉTAT DU BOT
-   ========================================================================== */
 let state = 'start'; 
 let pendingDomain = null;
 let quizScores = {};
@@ -298,24 +104,20 @@ function addUserMessage(text){
   chatlog.scrollTop = chatlog.scrollHeight;
 }
 
-
-// ---- API STATISTIQUES SANS PHP (Astuce Netlify / Google Form) ----
 function pingStats(domainKey) {
-  /* 
-   * POUR NETLIFY: L'astuce est de créer un Google Form avec un champ texte "domaine".
-   * Tu récupères l'URL d'action du formulaire (regarde dans le code source du Google Form)
-   * et le nom de l'input (ex: entry.123456789).
-   * Tu peux ainsi envoyer des données silencieusement sans aucun backend PHP !
-   * 
-   * Exemple de code :
-   * const formURL = "https://docs.google.com/forms/d/e/TON_ID_DE_FORMULAIRE/formResponse";
-   * const formData = new FormData();
-   * formData.append("entry.123456789", domainKey); // Remplace par ton ID d'input
-   * fetch(formURL, { method: "POST", body: formData, mode: "no-cors" });
-   */
-   
-  console.log("Statistique enregistrée localement pour le domaine : " + domainKey);
-  // Le code ci-dessus remplacera ton ancien appel PHP pour être compatible Netlify.
+  // ASTUCE NETLIFY / GOOGLE FORMS :
+  // Pour enregistrer des statistiques sans base de données PHP :
+  // 1. Crée un Google Form avec une seule question "Domaine" (Réponse courte).
+  // 2. Récupère l'URL d'action du formulaire et le nom de l'input (ex: entry.1234567).
+  // 3. Décommente le code ci-dessous et remplace avec tes identifiants.
+  
+  /*
+  const formURL = "https://docs.google.com/forms/d/e/TON_ID_DE_FORMULAIRE/formResponse";
+  const formData = new FormData();
+  formData.append("entry.123456789", domainKey); 
+  fetch(formURL, { method: "POST", body: formData, mode: "no-cors" }).catch(e => console.log(e));
+  */
+  console.log("Statistique prête à être envoyée (mode local) : " + domainKey);
 }
 
 function fillCard(domainKey){
@@ -327,14 +129,12 @@ function fillCard(domainKey){
   document.getElementById('cardDate').textContent = new Date().toLocaleDateString('fr-FR');
   document.getElementById('cardMetier').textContent = data.label;
 
-  // Nouvelle structure : Formations liées à leurs Établissements
   const container = document.getElementById('cardDetailsContainer');
   container.innerHTML = '';
   
   data.formations.forEach(f => {
     let block = document.createElement('div');
     block.className = 'formation-block';
-    
     let html = `<div class="formation-name">${f.nom} <span class="chip">${f.niveau}</span></div>`;
     
     f.etablissements.forEach(e => {
@@ -346,7 +146,6 @@ function fillCard(domainKey){
                  </div>
                </div>`;
     });
-    
     block.innerHTML = html;
     container.appendChild(block);
   });
@@ -361,21 +160,16 @@ function fillCard(domainKey){
   });
 
   document.getElementById('printBtn').style.display = 'block';
-  
-  // Enregistrement de la stat
   pingStats(domainKey);
 }
-
-
-// ---- SCÉNARIOS DE CONVERSATION ----
 
 function startMenu(){
   state = 'start';
   pendingDomain = null;
-  addBotMessage("Bonjour ! Je suis là pour t'aider. Où en es-tu ?", [
-    {label: "Je connais la famille de métiers ou le domaine qui m'intéresse", action: "set_state", payload: "search_domaine"},
-    {label: "Je cherche les lycées qui propose la formation que je souhaite", action: "set_state", payload: "search_formation"},
-    {label: "Je souhaite trouver toutes les formations proposé par le lycée souhaité", action: "set_state", payload: "search_etab"},
+  addBotMessage("Bonjour ! Je suis là pour t'aider. Comment veux-tu procéder ?", [
+    {label: "Chercher un domaine/métier", action: "set_state", payload: "search_domaine"},
+    {label: "Je connais déjà une formation", action: "set_state", payload: "search_formation"},
+    {label: "Rechercher par Lycée", action: "set_state", payload: "search_etab"},
     {label: "Je suis perdu (Faire le Quiz)", action: "start_quiz", payload: null}
   ]);
 }
@@ -391,7 +185,6 @@ function askConfirm(domainKey){
 
 function startQuiz() {
   state = 'quiz_q1';
-  // Réinitialisation des scores avec les vraies clés
   quizScores = { relation_client: 0, sante_social: 0, numerique_energie: 0, construction_batiment: 0, restauration_alimentation: 0, mecanique_maintenance: 0 };
   addBotMessage("D'accord, procédons par élimination. Préfères-tu :", [
     {label: "Le travail sur ordinateur / au bureau", action: "quiz_answer", payload: ["numerique_energie", "relation_client"]},
@@ -432,9 +225,6 @@ function processSearch(text, type) {
     ]);
   }
 }
-
-
-// ---- GESTION DES ENTRÉES ----
 
 function handleUserChoice(displayText, action, payload){
   addUserMessage(displayText);
@@ -504,7 +294,6 @@ input.addEventListener('keydown', e => {
 });
 document.getElementById('printBtn').addEventListener('click', () => window.print());
 
-// ---- Reconnaissance vocale (micro) ----
 const micBtn = document.getElementById('micBtn');
 const micNote = document.getElementById('micNote');
 const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -544,5 +333,5 @@ if(!SpeechRecognitionAPI){
   });
 }
 
-// Initialisation
+// Lancement automatique du script
 setTimeout(startMenu, 400);
