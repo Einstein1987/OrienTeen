@@ -1,15 +1,29 @@
 /* ==========================================================================
      DEBUT DU FICHIER CSS (À extraire dans style.css plus tard)
 ========================================================================== */
-  :root{
+  /*:root{
     --ink:#1F2E3D; --paper:#EFE9D8; --paper2:#F7F3E7;
     --brass:#A9793F; --brass-dark:#7C592E; --teal:#2F6B5E; --line:#D8CFB4;
+  }*/
+:root{
+    --ink: #0F172A;       /* Bleu nuit très profond pour le texte */
+    --paper: #F1F5F9;     /* Gris-bleu très clair pour le fond de page */
+    --paper2: #FFFFFF;    /* Blanc pur pour les bulles et panneaux */
+    --brass: #6366F1;     /* Violet/Indigo très dynamique (couleur primaire) */
+    --brass-dark: #4F46E5;/* Indigo foncé au survol */
+    --teal: #10B981;      /* Vert menthe pour le texte validé/succès */
+    --line: #E2E8F0;      /* Gris très doux pour les bordures */
   }
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--paper);color:var(--ink);font-family:'IBM Plex Sans',sans-serif; display: flex; flex-direction: column; min-height: 100vh;}
+  body{margin:0;background:var(--paper);color:var(--ink);/*font-family:'IBM Plex Sans',sans-serif;*/font-family: 'Outfit', sans-serif; display: flex; flex-direction: column; min-height: 100vh;}
   .wrap{max-width:1060px;margin:0 auto;padding:28px 20px 40px; flex: 1;}
   
-  .title{font-family:'Fraunces',serif;font-weight:600;font-size:26px;margin:0 0 4px;}
+  /*.title{font-family:'Fraunces',serif;font-weight:600;font-size:26px;margin:0 0 4px;}*/
+.title, .panel h2, .card-top .k1 { 
+    font-family: 'Outfit', sans-serif; 
+    font-weight: 700; 
+    letter-spacing: -0.02em; /* Rend le texte plus compact et moderne */
+  }
   .subtitle{font-size:14px;color:#5b5646;margin:0 0 24px;}
   .grid{display:grid;grid-template-columns:1.15fr 1fr;gap:22px;align-items:start;}
   @media(max-width:760px){.grid{grid-template-columns:1fr;}}
@@ -31,7 +45,6 @@
   .optrow{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 0 34px;}
   .optbtn{background:#fff;border:1px solid var(--brass);color:var(--brass-dark);border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer;font-family:inherit; transition: all 0.2s;}
   .optbtn:hover{background:var(--brass);color:#fff;}
-
   .composer{display:flex;gap:8px;margin-top:10px;}
   .composer input{flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:14.5px;background:#fff;color:var(--ink);}
   .composer input:focus{outline:2px solid var(--brass);outline-offset:1px;}
@@ -46,7 +59,10 @@
   .card{background:#fff;border:1px solid var(--line);border-radius:12px;position:relative;overflow:hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);}
   .card-top{background:var(--ink);color:#F3EEDC;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;}
   .card-top .k1{font-family:'Fraunces',serif;font-size:16px;font-weight:600;}
-  .card-top .k2{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#B9C4B0;}
+  /* .card-top .k2{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#B9C4B0;}*/
+     .card-top .k2, .stamp {
+         font-family: 'Space Mono', monospace;
+       }
   .perf{border-top:2px dashed var(--line);margin:0;}
   .card-body{padding:18px;}
   
