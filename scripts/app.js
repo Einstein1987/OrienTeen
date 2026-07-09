@@ -39,7 +39,8 @@ function matchEtablissementsDetailed(text){
     DOMAINS[key].formations.forEach(formation => {
       formation.etablissements.forEach(etab => {
         const ne = normalize(etab.nom);
-        if(ne.includes(n) || n.includes(ne)){
+        const nv = normalize(etab.ville);
+        if (ne.includes(n) || n.includes(ne) || nv.includes(n) || n.includes(nv)) {
           const id = etab.nom + '|' + etab.ville;
           if(!groups.has(id)){
             groups.set(id, { nom: etab.nom, ville: etab.ville, items: [] });
