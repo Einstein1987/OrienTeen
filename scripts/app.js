@@ -284,10 +284,15 @@ function createSchoolElement(etablissement) {
         city.textContent = etablissement.ville;
     }
     card.appendChild(city);
-    if (etablissement.transport) {
-        const transport = document.createElement("div");
-        transport.className = "school-transport";
-        transport.textContent = "Transport : " + etablissement.transport;
+    if (etablissement.transport || typeof etablissement.dureeMin === "number") {
+      const transport = document.createElement("div");
+      transport.className = "school-transport";
+      const morceaux = [];
+      if (typeof etablissement.dureeMin === "number") {
+        morceaux.push(`environ ${etablissement.dureeMin} min`);
+      }
+      if (etablissement.transport) morceaux.push(etablissement.transport);
+        transport.textContent = "Trajet : " + morceaux.join(" — ");
         card.appendChild(transport);
     }
     return card;
