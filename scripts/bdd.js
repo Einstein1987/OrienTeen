@@ -918,6 +918,49 @@ const DISTANCES_CORBEIL_ESSONNES = {
   "Lycée Nikola Tesla|Dourdan": 43
 };
 
+const DUREES_TRANSPORT_CORBEIL = {
+  "Lycée Robert Doisneau|Corbeil-Essonnes": 26,
+  "Lycée Charles Baudelaire|Évry-Courcouronnes": 42,
+  "Lycée Auguste Perret|Évry-Courcouronnes": 42,
+  "Lycée Pierre Mendès France|Ris-Orangis": 35,
+  "Lycée Château des Coudraies|Étiolles": 34,
+  "Lycée Marie Laurencin|Mennecy": 41,
+  "Lycée Les Frères Moreau|Quincy-sous-Sénart": 71,
+  "Lycée Nadar|Draveil": 71,
+  "EREA Jean Isoard|Montgeron": 74,
+  "Lycée André-Marie Ampère|Morsang-sur-Orge": 81,
+  "Lycée Paul Langevin|Sainte-Geneviève-des-Bois": 65,
+  "Lycée Jean Monnet|Juvisy-sur-Orge": 46,
+  "Lycée Gaspard Monge|Savigny-sur-Orge": 68,
+  "Lycée Louis Armand|Yerres": 64,
+  "Lycée Clément Ader|Athis-Mons": 70,
+  "Lycée Léonard de Vinci|Saint-Michel-sur-Orge": 77,
+  "Lycée Jean-Pierre Timbaud|Brétigny-sur-Orge": 64,
+  "Lycée Marguerite Yourcenar|Morangis": 83,
+  "Lycée Jean Perrin|Longjumeau": 90,
+  "Lycée Alexandre Denis|Cerny": 59,
+  "Lycée Paul Belmondo|Arpajon": 77,
+  "EREA Le Château du Lac|Ollainville": 98,
+  "Lycée Gustave Eiffel|Massy": 110,
+  "Lycée Parc de Vilgénis|Massy": 93,
+  "Lycée Henri Poincaré|Palaiseau": 110,
+  "Lycée International Paris-Saclay|Palaiseau": 108,
+  "Lycée L'Essouriau|Les Ulis": 98,
+  "Lycée Nelson Mandela|Étampes": 120,
+  "Lycée Geoffroy Saint-Hilaire|Étampes": 110,
+  "Lycée Nikola Tesla|Dourdan": 133,
+  "Lycée Georges Brassens|Évry-Courcouronnes": 35
+};
+
+const NORMALIZED_DUREES_CORBEIL = Object.fromEntries(
+  Object.entries(DUREES_TRANSPORT_CORBEIL).map(([k, v]) => [normalizeDistanceKey(k), v])
+);
+
+function getDureeFromCorbeil(etablissement) {
+  const key = normalizeDistanceKey(`${etablissement.nom}|${etablissement.ville}`);
+  return NORMALIZED_DUREES_CORBEIL[key] ?? null;
+}
+
 function normalizeDistanceKey(value) {
   return value
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -934,7 +977,7 @@ function getDistanceFromCorbeil(etablissement) {
 function sortEtablissementsByDistance(domains) {
   Object.values(domains).forEach(domain => {
     domain.formations.forEach(formation => {
-      formation.etablissements.forEach(e => { e.distanceKm = getDistanceFromCorbeil(e); });
+      formation.etablissements.forEach(e => { e.distanceKm = getDistanceFromCorbeil(e); e.dureeMin = getDureeFromCorbeil(e); });
       formation.etablissements.sort((a, b) => {
         const d = a.distanceKm - b.distanceKm;
         if (d !== 0) return d;
