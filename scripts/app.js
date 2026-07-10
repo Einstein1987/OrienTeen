@@ -150,19 +150,19 @@ function addUserMessage(text){
 }
 
 function pingStats(domainKey) {
-  // ASTUCE NETLIFY / GOOGLE FORMS :
-  // Pour enregistrer des statistiques sans base de données PHP :
-  // 1. Crée un Google Form avec une seule question "Domaine" (Réponse courte).
-  // 2. Récupère l'URL d'action du formulaire et le nom de l'input (ex: entry.1234567).
-  // 3. Décommente le code ci-dessous et remplace avec tes identifiants.
-  
-  /*
-  const formURL = "https://docs.google.com/forms/d/e/TON_ID_DE_FORMULAIRE/formResponse";
-  const formData = new FormData();
-  formData.append("entry.123456789", domainKey); 
-  fetch(formURL, { method: "POST", body: formData, mode: "no-cors" }).catch(e => console.log(e));
-  */
-  console.log("Statistique prête à être envoyée (mode local) : " + domainKey);
+    const FORM_ID = "1FAIpQLSfG2xzc8VM2r52ae0MVS--AuzaHgFO6Mth6csdnuetRXi0cYw"; 
+    const ENTRY_TYPE   = "entry.1851976194";
+    const ENTRY_ID = "entry.721362482"; 
+    const url = `https://docs.google.com/forms/d/e/${FORM_ID}/formResponse`;
+    const formData = new FormData();
+    formData.append(ENTRY_TYPE, type);
+    formData.append(ENTRY_VALEUR, valeur || "");
+    fetch(url, { 
+      method: 'POST', 
+      mode: 'no-cors', 
+      body: formData 
+    })
+    .catch(err => console.error("Erreur stats :", err));
 }
 
 function fillCardCustom(selection) {
