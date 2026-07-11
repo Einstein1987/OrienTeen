@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TrouveTaVoie 3e — Collège La Nacelle</title>
-<link rel="icon" type="image/x-icon" href="/img/favicon.ico">
+<link rel="icon" type="image/x-icon" href="img/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles/styles.css">
@@ -13,12 +13,13 @@
 <body>
 <div class="wrap">
  <div class="header-title">
-  <img src="/img/logo.png" alt="Logo TrouveTaVoie" class="app-logo">
+  <img src="img/logo.png" alt="Logo TrouveTaVoie" class="app-logo">
   <h1>TrouveTaVoie</h1>
   <div class="stamp-3e">3e</div>
 </div>
 <p class="subtitle">Discute avec l'assistant, fais le quiz, ou recherche directement une formation ou un lycée.</p>
-   <nav class="tabs" role="tablist" aria-label="Choix de la voie">
+
+  <nav class="tabs" role="tablist" aria-label="Choix de la voie">
     <button type="button" class="tab is-active" data-vue="vue-pro" role="tab" aria-selected="true">
       Je vais en 2<sup>nde</sup> professionnelle
     </button>
@@ -26,9 +27,9 @@
       Je vais en 2<sup>nde</sup> générale et technologique
     </button>
   </nav>
- 
+
   <section id="vue-pro" class="vue is-active" role="tabpanel">
-   <div class="grid">
+  <div class="grid">
     <!-- Zone de Chat -->
     <div class="panel">
       <h2>Assistant d'orientation</h2>
@@ -75,8 +76,9 @@
   <p class="psy-note" id="psyNote" style="display:none;">
    💡 N'hésite pas à en parler à ton professeur principal et/ou à la PsyEN de l'établissement.
   </p>
-</section>
- <section id="vue-2gt" class="vue" role="tabpanel"></section>
+  </section>
+
+  <section id="vue-2gt" class="vue" role="tabpanel"></section>
 </div>
 <div class="app-footer-minimal">
   <p>
@@ -85,12 +87,11 @@
       <a href="https://github.com/Einstein1987/TrouveTaVoie" target="_blank">Code source</a>
   </p>
 </div>
-<script src="scripts/bdd_pro.js" defer></script>
-<script src="scripts/app_pro.js" defer></script>
+<script src="scripts/bdd-pro.js" defer></script>
+<script src="scripts/app-pro.js" defer></script>
 <script src="scripts/export.js" defer></script>
-<script src="scripts/bdd_gt.js" defer></script>
-<script src="scripts/app_gt.js" defer></script>
+<script src="scripts/bdd-2gt.js" defer></script>
+<script src="scripts/app-2gt.js" defer></script>
 <script src="scripts/tabs.js" defer></script>
 </body>
 </html>
-
