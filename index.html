@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles/styles.css">
+<link rel="stylesheet" href="styles/2gt.css">
 </head>
 <body>
 <div class="wrap">
@@ -17,7 +18,17 @@
   <div class="stamp-3e">3e</div>
 </div>
 <p class="subtitle">Discute avec l'assistant, fais le quiz, ou recherche directement une formation ou un lycée.</p>
-  <div class="grid">
+   <nav class="tabs" role="tablist" aria-label="Choix de la voie">
+    <button type="button" class="tab is-active" data-vue="vue-pro" role="tab" aria-selected="true">
+      Je vais en 2<sup>nde</sup> professionnelle
+    </button>
+    <button type="button" class="tab" data-vue="vue-2gt" role="tab" aria-selected="false">
+      Je vais en 2<sup>nde</sup> générale et technologique
+    </button>
+  </nav>
+ 
+  <section id="vue-pro" class="vue is-active" role="tabpanel">
+   <div class="grid">
     <!-- Zone de Chat -->
     <div class="panel">
       <h2>Assistant d'orientation</h2>
@@ -64,16 +75,22 @@
   <p class="psy-note" id="psyNote" style="display:none;">
    💡 N'hésite pas à en parler à ton professeur principal et/ou à la PsyEN de l'établissement.
   </p>
+</section>
+ <section id="vue-2gt" class="vue" role="tabpanel"></section>
 </div>
 <div class="app-footer-minimal">
   <p>
       Développé par <strong>Jérémy VIOLETTE</strong> • 
-      <a href="https://github.com/Einstein1987/OrienTeen/blob/main/LICENSE" target="_blank">Licence MIT</a> • 
-      <a href="https://github.com/Einstein1987/OrienTeen" target="_blank">Code source</a>
+      <a href="https://github.com/Einstein1987/TrouveTaVoie/blob/main/LICENSE" target="_blank">Licence MIT</a> • 
+      <a href="https://github.com/Einstein1987/TrouveTaVoie" target="_blank">Code source</a>
   </p>
 </div>
-<script src="scripts/bdd.js" defer></script>
-<script src="scripts/app.js" defer></script>
+<script src="scripts/bdd_pro.js" defer></script>
+<script src="scripts/app_pro.js" defer></script>
 <script src="scripts/export.js" defer></script>
+<script src="scripts/bdd_gt.js" defer></script>
+<script src="scripts/app_gt.js" defer></script>
+<script src="scripts/tabs.js" defer></script>
 </body>
 </html>
+
