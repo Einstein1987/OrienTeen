@@ -1,3 +1,22 @@
+/*
+ * TrouveTaVoie — Application d'aide à l'orientation pour les élèves de 3e.
+ * Copyright (C) 2026 Jérémy Violette
+ *
+ * Ce programme est un logiciel libre : vous pouvez le redistribuer et/ou le
+ * modifier selon les termes de la GNU Affero General Public License telle que
+ * publiée par la Free Software Foundation, soit la version 3 de la licence,
+ * soit (à votre choix) toute version ultérieure.
+ *
+ * Ce programme est distribué dans l'espoir qu'il sera utile, mais SANS AUCUNE
+ * GARANTIE ; sans même la garantie implicite de QUALITÉ MARCHANDE ou
+ * D'ADÉQUATION À UN USAGE PARTICULIER. Voir la GNU Affero General Public
+ * License pour plus de détails.
+ *
+ * Vous devriez avoir reçu une copie de la GNU Affero General Public License
+ * avec ce programme. Si ce n'est pas le cas, voir <https://www.gnu.org/licenses/>.
+ *
+ * Code source : https://github.com/Einstein1987/TrouveTaVoie
+ */
 const YES_WORDS = ["oui", "ouais", "exact", "voila", "c'est ca", "cest ca", "tout a fait", "carrement"];
 const NO_WORDS = ["non", "pas vraiment", "pas trop", "pas exactement"];
 
@@ -88,7 +107,6 @@ function matchYesNo(text){
 
 let state = 'start'; 
 let pendingSelection = null;
-let quizScores = {};
 
 const chatlog = document.getElementById('chatlog');
 const input = document.getElementById('userInput');
@@ -351,31 +369,88 @@ function askConfirm(selection){
   ]);
 }
 
+/* =============================================================================
+ * QUIZ D'ORIENTATION
+ * Questions et barème : scripts/quiz_pro.js
+ *
+ * Le quiz ne DÉSIGNE pas un métier : il propose TROIS pistes à explorer, et
+ * c'est l'élève qui tranche. Un questionnaire d'intérêts ouvre des portes, il
+ * ne décide pas d'une orientation.
+ * ========================================================================== */
+
+let quizIndex     = 0;    // question en cours
+let quizReponses  = [];   // réponses choisies, dans l'ordre
+
 function startQuiz() {
   if (typeof pingStats === "function") pingStats('quiz_lance', '');
-  state = 'quiz_q1';
-  quizScores = { relation_client: 0, sante_social: 0, numerique_energie: 0, batiment: 0, restauration: 0, mecanique_auto: 0 };
-  addBotMessage("D'accord, procédons par élimination. Préfères-tu :", [
-    {label: "Le travail sur ordinateur / au bureau", action: "quiz_answer", payload: ["numerique_energie", "relation_client"]},
-    {label: "Le travail manuel / bouger", action: "quiz_answer", payload: ["batiment", "mecanique_auto", "restauration", "sante_social"]}
-  ]);
+  quizIndex    = 0;
+  quizReponses = [];
+  state = 'quiz';
+  addBotMessage(
+    "Pas de souci, c'est fait pour ça. Je vais te poser " + QUIZ_PRO.length +
+    " questions sur ce que tu aimes — pas sur des métiers, tu n'as pas besoin " +
+    "de les connaître. À la fin, je te proposerai trois pistes à explorer.",
+    [{ label: "C'est parti !", action: "quiz_next", payload: null }]
+  );
 }
 
-function nextQuizStep(answerPayload) {
-  answerPayload.forEach(domain => { if(quizScores[domain] !== undefined) quizScores[domain]++; });
+// Affiche la question courante, ou le résultat s'il n'y en a plus.
+function poserQuestionQuiz() {
+  if (quizIndex >= QUIZ_PRO.length) { afficherResultatQuiz(); return; }
 
-  if (state === 'quiz_q1') {
-    state = 'quiz_q2';
-    addBotMessage("Question 2 : Aimes-tu être en contact avec le public ou des clients ?", [
-      {label: "Oui, j'aime aider ou conseiller les autres", action: "quiz_answer", payload: ["relation_client", "sante_social", "restauration"]},
-      {label: "Non, je préfère la technique ou travailler seul/en équipe", action: "quiz_answer", payload: ["numerique_energie", "batiment", "mecanique_auto"]}
-    ]);
-  } else if (state === 'quiz_q2') {
-    let bestDomain = Object.keys(quizScores).reduce((a, b) => quizScores[a] > quizScores[b] ? a : b);
-    const selection = domainSelection(bestDomain);
-    selection.fromQuiz = true;
-    askConfirm(selection);
+  const q = QUIZ_PRO[quizIndex];
+  const progression = "Question " + (quizIndex + 1) + " / " + QUIZ_PRO.length;
+
+  addBotMessage(
+    progression + " — " + q.question,
+    q.reponses.map(function (rep, i) {
+      return { label: rep.label, action: "quiz_answer", payload: i };
+    })
+  );
+}
+
+// L'élève a cliqué sur une réponse.
+function nextQuizStep(indexReponse) {
+  const q = QUIZ_PRO[quizIndex];
+  if (q && q.reponses[indexReponse]) quizReponses.push(q.reponses[indexReponse]);
+  quizIndex++;
+  poserQuestionQuiz();
+}
+
+// Trois pistes, jamais une seule : c'est l'élève qui choisit celle qu'il veut voir.
+function afficherResultatQuiz() {
+  const top = calculerResultatQuiz(quizReponses);
+
+  if (!top.length) {           // ne devrait pas arriver, mais on ne plante pas
+    addBotMessage("Je n'arrive pas à dégager de piste claire. Reprenons depuis le début.",
+      [{ label: "Retour au menu", action: "set_state", payload: "start" }]);
+    state = 'start';
+    return;
   }
+
+  state = 'quiz_resultat';
+  addBotMessage(
+    "Voilà, c'est fini ! D'après tes réponses, voici les trois familles de métiers " +
+    "qui te correspondent le mieux. Rien n'est figé : clique sur celle que tu veux " +
+    "découvrir, tu pourras revenir voir les autres ensuite.",
+    top.map(function (o) {
+      const pct = Math.round(o.affinite * 100);
+      return {
+        label: DOMAINS[o.domainKey].label + " — " + pct + " %",
+        action: "quiz_choix",
+        payload: o.domainKey
+      };
+    }).concat([
+      { label: "Aucune ne me parle, refaire le quiz", action: "start_quiz", payload: null }
+    ])
+  );
+}
+
+// L'élève a choisi l'une des trois pistes.
+function choisirPisteQuiz(domainKey) {
+  const selection = domainSelection(domainKey);
+  selection.fromQuiz = true;      // pour distinguer quiz_resultat et domaine dans les stats
+  askConfirm(selection);
 }
 
 function searchNotFound(){
@@ -450,8 +525,14 @@ function applyChoice(action, payload){
   else if (action === "start_quiz") {
     startQuiz();
   }
+  else if (action === "quiz_next") {
+    poserQuestionQuiz();
+  }
   else if (action === "quiz_answer") {
     nextQuizStep(payload);
+  }
+  else if (action === "quiz_choix") {
+    choisirPisteQuiz(payload);
   }
   else if (action === "confirm_selection") {
     askConfirm(payload);
