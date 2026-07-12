@@ -481,9 +481,8 @@
       '<div class="gt-card-actions">' +
         '<button type="button" class="card-action-btn" data-export="pdf">📄 Télécharger le PDF</button>' +
       '</div>' +
-      '<p class="gt-actions-hint">Le fichier est enregistré sur ton appareil : tu peux ensuite ' +
-      'l\'imprimer, l\'envoyer par mail ou le déposer sur l\'ENT, et le montrer à tes parents ' +
-      'ou à ton professeur principal.</p>' +
+      '<p class="psy-note">💡 N\'hésite pas à en parler à ton professeur principal ' +
+      'et/ou à la PsyEN de l\'établissement.</p>' +
       '<p class="gt-source">Sources : ' + SOURCE_2GT.affelnet + ' ; ' + SOURCE_2GT.fiche16 +
       ' ; ' + SOURCE_2GT.cio + '.<br>' + SOURCE_2GT.avertissement + '</p>';
 

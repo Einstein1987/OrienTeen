@@ -30,5 +30,21 @@
     onglets.forEach(function (t) {
       t.addEventListener("click", function () { activer(t.dataset.vue); });
     });
+
+    // Le logo remet l'application à son état de départ : c'est le geste attendu
+    // quand on veut « recommencer », et c'est plus simple qu'un bouton de reset
+    // qui devrait vider le chat, la carte, les cases cochées et les onglets.
+    const logo = document.querySelector(".app-logo");
+    if (logo) {
+      logo.style.cursor = "pointer";
+      logo.setAttribute("role", "button");
+      logo.setAttribute("tabindex", "0");
+      logo.setAttribute("title", "Revenir au début");
+      const recommencer = function () { window.location.reload(); };
+      logo.addEventListener("click", recommencer);
+      logo.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); recommencer(); }
+      });
+    }
   });
 })();
