@@ -111,7 +111,7 @@ const QUIZ_PRO = [
         scores: { sante_social: 4, beaute: 3 } },
       { label: "Avoir remis en marche une machine à l'arrêt",
         scores: { mecanique_auto: 4, pilotage_maintenance: 3, realisation_mecanique: 2 } },
-      { label: "Avoir fait plaisir : régalé quelqu'un, ou mis en valeur",
+      { label: "Avoir fait plaisir : avoir régalé quelqu'un, ou l'avoir mis en beauté",
         scores: { restauration: 4, mode_art: 3, beaute: 2, relation_client: 1 } }
     ]
   },
