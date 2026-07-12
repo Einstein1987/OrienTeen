@@ -45,13 +45,13 @@ const QUIZ_PRO = [
     id: "q1",
     question: "Pour commencer : qu'est-ce qui te donnerait le plus envie de te lever le matin ?",
     reponses: [
-      { label: "Fabriquer quelque chose de mes mains",
+      { label: "Fabriquer quelque chose de mes propres mains",
         scores: { batiment: 3, agencement_bois: 3, realisation_mecanique: 3, mode_art: 2 } },
       { label: "M'occuper des autres, les aider",
         scores: { sante_social: 4, beaute: 2, securite: 1 } },
-      { label: "Comprendre comment ça marche et le réparer",
+      { label: "Comprendre comment les choses marchent, et les réparer",
         scores: { mecanique_auto: 3, numerique_energie: 3, pilotage_maintenance: 3 } },
-      { label: "Organiser, gérer, que tout soit carré",
+      { label: "Organiser, gérer, faire que tout soit carré",
         scores: { gestion_logistique: 4, relation_client: 2, etudes_batiment: 1 } }
     ]
   },
@@ -103,7 +103,7 @@ const QUIZ_PRO = [
 
   {
     id: "q5",
-    question: "Qu'est-ce qui te rendrait le plus fier en fin de journée ?",
+    question: "Qu'est-ce qui te ferait le plus plaisir, en rentrant le soir ?",
     reponses: [
       { label: "Voir un bâtiment auquel j'ai participé",
         scores: { batiment: 4, etudes_batiment: 3, agencement_bois: 1 } },
@@ -111,22 +111,22 @@ const QUIZ_PRO = [
         scores: { sante_social: 4, beaute: 3 } },
       { label: "Avoir remis en marche une machine à l'arrêt",
         scores: { mecanique_auto: 4, pilotage_maintenance: 3, realisation_mecanique: 2 } },
-      { label: "Avoir fait plaisir, régalé, mis en valeur",
+      { label: "Avoir fait plaisir : régalé quelqu'un, ou mis en valeur",
         scores: { restauration: 4, mode_art: 3, beaute: 2, relation_client: 1 } }
     ]
   },
 
   {
     id: "q6",
-    question: "Dans un travail de groupe, tu es plutôt…",
+    question: "Dans un travail de groupe, ton rôle naturel, c'est plutôt…",
     reponses: [
-      { label: "Celui qui met la main à la pâte",
+      { label: "Mettre la main à la pâte",
         scores: { batiment: 2, agencement_bois: 2, restauration: 2, realisation_mecanique: 2 } },
-      { label: "Celui qui organise et répartit les tâches",
+      { label: "Organiser et répartir les tâches",
         scores: { gestion_logistique: 4, relation_client: 2, securite: 1 } },
-      { label: "Celui qui trouve les idées, le style",
+      { label: "Trouver les idées, donner le style",
         scores: { mode_art: 4, etudes_batiment: 2, restauration: 1 } },
-      { label: "Celui qui vérifie que rien n'est oublié",
+      { label: "Vérifier que rien n'est oublié",
         scores: { pilotage_maintenance: 3, securite: 3, gestion_logistique: 2 } }
     ]
   },
@@ -137,26 +137,26 @@ const QUIZ_PRO = [
     reponses: [
       { label: "Oui, j'aime bouger, porter, me dépenser",
         scores: { batiment: 3, nature_paysage: 3, securite: 3, restauration: 2 } },
-      { label: "Je préfère un travail minutieux, assis ou debout au calme",
+      { label: "Je préfère un travail minutieux, au calme",
         scores: { mode_art: 3, beaute: 3, etudes_batiment: 2, numerique_energie: 2 } },
       { label: "Un peu des deux, selon les moments",
         scores: { mecanique_auto: 2, agencement_bois: 2, realisation_mecanique: 2, pilotage_maintenance: 2 } },
-      { label: "J'aime surtout être en mouvement, parler, circuler",
+      { label: "J'aime surtout être en mouvement et parler aux gens",
         scores: { relation_client: 3, gestion_logistique: 3, sante_social: 2 } }
     ]
   },
 
   {
     id: "q8",
-    question: "Ce qui compte le plus pour toi dans un métier ?",
+    question: "Qu'est-ce qui compte le plus pour toi dans un métier ?",
     reponses: [
       { label: "Que ce soit utile aux autres",
         scores: { sante_social: 4, securite: 3, restauration: 1 } },
-      { label: "Que ce soit technique, qu'on apprenne sans arrêt",
+      { label: "Que ce soit technique, et qu'on apprenne sans arrêt",
         scores: { numerique_energie: 3, pilotage_maintenance: 3, mecanique_auto: 2, etudes_batiment: 2 } },
-      { label: "Que je puisse être créatif",
+      { label: "Pouvoir créer, inventer des choses",
         scores: { mode_art: 4, agencement_bois: 3, restauration: 2, beaute: 2 } },
-      { label: "Que ce soit concret, qu'on voie le résultat",
+      { label: "Que ce soit concret, qu'on voie le résultat de son travail",
         scores: { batiment: 3, realisation_mecanique: 3, nature_paysage: 2 } }
     ]
   },
