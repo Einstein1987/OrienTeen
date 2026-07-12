@@ -335,14 +335,19 @@ function createSchoolElement(etablissement) {
     return card;
 }
 
-function startMenu(){
+// `message` permet de revenir au menu en cours de conversation sans redire
+// « Bonjour ! » à un élève qui discute depuis dix questions.
+// `garderCarte` évite d'effacer la fiche que l'élève vient d'obtenir.
+function startMenu(message, garderCarte){
   state = 'start';
   pendingSelection = null;
-  const psyNote = document.getElementById("psyNote");
-  if (psyNote) {
-    psyNote.style.display = "none";
+  if (!garderCarte) {
+    const psyNote = document.getElementById("psyNote");
+    if (psyNote) {
+      psyNote.style.display = "none";
+    }
   }
-  addBotMessage("Bonjour ! Je suis là pour t'aider. Où en es-tu ?", [
+  addBotMessage(message || "Bonjour ! Je suis là pour t'aider. Où en es-tu ?", [
     {label: "Je connais déjà la formation que je veux faire", action: "set_state", payload: "search_formation"},
     {label: "Je connais la famille de métiers ou le domaine qui m'intéresse", action: "set_state", payload: "search_domaine"},
     {label: "Je connais un lycée et je veux voir ses formations", action: "set_state", payload: "search_etab"},
@@ -351,7 +356,10 @@ function startMenu(){
 }
 
 function askConfirm(selection){
-  if(!selection || !selection.formations || !selection.formations.length){ startMenu(); return; }
+  if(!selection || !selection.formations || !selection.formations.length){
+    startMenu("Je n'ai rien trouvé pour cette piste. Reprenons : que veux-tu faire ?");
+    return;
+  }
   state = 'confirm';
   pendingSelection = selection;
 
@@ -462,10 +470,11 @@ function choisirPisteQuiz(domainKey) {
   quizStatEnvoyee    = true;
   addBotMessage(
     "Très bien ! Voici ce que propose cette famille de métiers, dans le panneau de droite. " +
-    "Tu peux la télécharger en PDF, ou revenir en arrière pour explorer une autre piste.",
+    "Tu peux la télécharger en PDF — ou remonter un peu dans la discussion pour cliquer " +
+    "sur l'une des deux autres pistes, elles restent disponibles.",
     [
-      { label: "Revoir mes trois pistes",  action: "quiz_resultat", payload: null },
-      { label: "Retour au menu",           action: "set_state",     payload: "start" }
+      { label: "Refaire le quiz",  action: "start_quiz", payload: null },
+      { label: "Retour au menu",   action: "menu",       payload: null }
     ]
   );
   fillCardCustom(selection);      // envoie aussi la statistique quiz_resultat
@@ -553,19 +562,19 @@ function applyChoice(action, payload){
   else if (action === "quiz_choix") {
     choisirPisteQuiz(payload);
   }
-  else if (action === "quiz_resultat") {
-    afficherResultatQuiz();       // les réponses sont conservées : pas besoin de tout refaire
+  else if (action === "menu") {
+    startMenu("Pas de problème. Que veux-tu faire maintenant ?", true);
   }
   else if (action === "confirm_selection") {
     askConfirm(payload);
   }
   else if (action === "confirm") {
     if (payload === 'yes') {
-      addBotMessage("Parfait ! Voici ton projet d'orientation, juste à droite. N'oublie pas de l'imprimer.");
+      addBotMessage("Parfait ! Voici ton projet d'orientation, juste à droite. Pense à le télécharger en PDF.");
       fillCardCustom(pendingSelection);
       state = 'start'; 
     } else {
-      startMenu();
+      startMenu("D'accord, reprenons. Que veux-tu faire ?");
     }
   }
 }
