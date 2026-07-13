@@ -24,7 +24,12 @@ function normalize(str){
   return str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
 }
 
+// La compréhension du texte libre est déléguée à nlp_pro.js : vocabulaire
+// d'élève, tolérance aux fautes, notation des domaines. Le bot reste
+// entièrement déterministe — rien n'est inventé, tout vient des dictionnaires.
 function matchDomains(text){
+  if (typeof domainesSurs === "function") return domainesSurs(text);
+  // Repli si nlp_pro.js n'a pas été chargé
   const n = normalize(text);
   const matches = [];
   for(const key in DOMAINS) {
@@ -37,6 +42,9 @@ function matchDomains(text){
 // avec le domaine auquel elle appartient. Granularité = la formation (et non le domaine).
 function matchFormationsDetailed(text){
   const n = normalize(text);
+  // Garde-fou : une saisie trop courte ferait correspondre TOUTES les formations
+  // (« a » est contenu dans presque tous les intitulés).
+  if (n.length < 3) return [];
   const results = [];
   for(const key in DOMAINS) {
     DOMAINS[key].formations.forEach(formation => {
@@ -53,6 +61,7 @@ function matchFormationsDetailed(text){
 // lycée, on liste TOUTES les formations qu'il propose, tous domaines confondus.
 function matchEtablissementsDetailed(text){
   const n = normalize(text);
+  if (n.length < 3) return [];   // même garde-fou que pour les formations
   const groups = new Map();
   for(const key in DOMAINS) {
     DOMAINS[key].formations.forEach(formation => {
@@ -481,11 +490,44 @@ function choisirPisteQuiz(domainKey) {
   state = 'quiz_resultat';
 }
 
-function searchNotFound(){
-  addBotMessage("Je n'ai rien trouvé de précis dans ma base. Veux-tu essayer une autre recherche ou faire le quiz ?", [
-    {label: "Refaire une recherche", action: "set_state", payload: "start"},
-    {label: "Faire le quiz", action: "start_quiz", payload: null}
-  ]);
+/* -----------------------------------------------------------------------------
+ * Quand la recherche échoue, on ne répond plus « je n'ai pas compris ».
+ * On propose les TROIS domaines les plus proches de ce que l'élève a écrit.
+ * Ces pistes ne sont pas inventées : ce sont les mieux notés par nlp_pro.js.
+ * -------------------------------------------------------------------------- */
+function searchNotFound(text){
+  const proches = (typeof pistesProches === "function" && text)
+    ? pistesProches(text, 3)
+    : [];
+
+  if (proches.length) {
+    const options = proches.map(function (o) {
+      return {
+        label: DOMAINS[o.domainKey].label,
+        action: "confirm_selection",
+        payload: domainSelection(o.domainKey)
+      };
+    });
+    options.push({ label: "Aucune ne correspond, faire le quiz", action: "start_quiz", payload: null });
+
+    addBotMessage(
+      "Je ne suis pas certain d'avoir bien compris. Mais d'après ce que tu as écrit, " +
+      "ces familles de métiers pourraient s'en rapprocher — dis-moi si l'une d'elles te parle :",
+      options
+    );
+    return;
+  }
+
+  // Vraiment rien : on ne bluffe pas, on propose le quiz.
+  addBotMessage(
+    "Là, je ne vois pas à quoi rattacher ce que tu m'as écrit. Ce n'est pas grave ! " +
+    "Tu peux reformuler avec d'autres mots, ou faire le quiz : il te posera des questions " +
+    "simples sur ce que tu aimes.",
+    [
+      { label: "Reformuler ma recherche", action: "set_state", payload: "search_domaine" },
+      { label: "Faire le quiz",           action: "start_quiz", payload: null }
+    ]
+  );
 }
 
 function processSearch(text, type) {
@@ -498,7 +540,7 @@ function processSearch(text, type) {
       const opts = keys.map(k => ({label: DOMAINS[k].label, action: "confirm_selection", payload: domainSelection(k)}));
       addBotMessage("Plusieurs pistes correspondent. Laquelle te parle le plus ?", opts);
     } else {
-      searchNotFound();
+      searchNotFound(text);
     }
   }
   else if (type === 'formation') {
@@ -514,7 +556,7 @@ function processSearch(text, type) {
       }));
       addBotMessage("Plusieurs formations correspondent. Laquelle veux-tu voir ?", opts);
     } else {
-      searchNotFound();
+      searchNotFound(text);
     }
   }
   else if (type === 'etab') {
@@ -530,7 +572,7 @@ function processSearch(text, type) {
       }));
       addBotMessage("Plusieurs établissements correspondent. Lequel veux-tu ?", opts);
     } else {
-      searchNotFound();
+      searchNotFound(text);
     }
   }
 }
