@@ -40,12 +40,12 @@
     "trajet": "RER D puis RER D"
   },
   "Lycée Nadar|Draveil": {
-    "dureeMin": 78,
+    "dureeMin": 73,
     "trajet": "Bus 4245 puis RER D puis Bus 4116"
   },
   "EREA Jean Isoard|Montgeron": {
-    "dureeMin": 76,
-    "trajet": "Bus 4245 puis RER D puis Bus 4113 puis Bus 4118"
+    "dureeMin": 81,
+    "trajet": "Bus 4245 puis Bus 4122"
   },
   "Lycée André-Marie Ampère|Morsang-sur-Orge": {
     "dureeMin": 81,
@@ -56,11 +56,11 @@
     "trajet": "Bus 4245 puis Bus 4504"
   },
   "Lycée Jean Monnet|Juvisy-sur-Orge": {
-    "dureeMin": 58,
+    "dureeMin": 53,
     "trajet": "Bus 4245 puis RER D"
   },
   "Lycée Gaspard Monge|Savigny-sur-Orge": {
-    "dureeMin": 68,
+    "dureeMin": 69,
     "trajet": "Bus 4245 puis RER D puis RER C"
   },
   "Lycée Louis Armand|Yerres": {
@@ -68,7 +68,7 @@
     "trajet": "Bus 4245 puis RER D puis RER D"
   },
   "Lycée Clément Ader|Athis-Mons": {
-    "dureeMin": 70,
+    "dureeMin": 69,
     "trajet": "Bus 4245 puis RER D puis RER C"
   },
   "Lycée Léonard de Vinci|Saint-Michel-sur-Orge": {
@@ -109,15 +109,15 @@
   },
   "Lycée Henri Poincaré|Palaiseau": {
     "dureeMin": 110,
-    "trajet": "RER D puis RER D puis RER C puis RER B"
+    "trajet": "RER D puis RER D puis RER D puis RER B"
   },
   "Lycée International Paris-Saclay|Palaiseau": {
     "dureeMin": 108,
     "trajet": "RER D puis RER D puis Bus 9105"
   },
   "Lycée L'Essouriau|Les Ulis": {
-    "dureeMin": 98,
-    "trajet": "RER D puis RER D puis Bus 9105 puis Bus 4603"
+    "dureeMin": 115,
+    "trajet": "RER D puis RER D puis Bus 9105 puis Bus 4609"
   },
   "Lycée Nelson Mandela|Étampes": {
     "dureeMin": 120,
