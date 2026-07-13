@@ -1,6 +1,60 @@
 /* ==========================================================================
      FICHIER CSS - CHARTE GRAPHIQUE
 ========================================================================== */
+
+/* --- POLICES — hébergées avec l'application. --- */
+/* --- Outfit : la police de l'interface --- */
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('fonts/outfit-v15-latin_latin-ext-regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('fonts/outfit-v15-latin_latin-ext-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('fonts/outfit-v15-latin_latin-ext-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('fonts/outfit-v15-latin_latin-ext-700.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('fonts/outfit-v15-latin_latin-ext-800.woff2') format('woff2');
+}
+
+/* --- Space Mono : le tampon et l'en-tête de la carte --- */
+@font-face {
+  font-family: 'Space Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('fonts/space-mono-v17-latin_latin-ext-regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Space Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('fonts/space-mono-v17-latin_latin-ext-700.woff2') format('woff2');
+}
 :root{
      --ink: #0F172A;       /* Bleu nuit très profond pour le texte */
      --paper: #F1F5F9;     /* Gris-bleu très clair pour le fond de page */
