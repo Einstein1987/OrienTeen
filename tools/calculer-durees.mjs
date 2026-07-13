@@ -1,9 +1,9 @@
 // =============================================================================
-// OrienTeen — Pré-calcul des durées ET des lignes de transport (collège -> lycées)
+// TrouveTaVoie — Pré-calcul des durées ET des lignes de transport (collège -> lycées)
 // via le calculateur d'itinéraires Île-de-France Mobilités (portail PRIM, Navitia).
 //
 // À lancer À LA MAIN, une fois par an (quand l'offre change) :
-//   PRIM_API_KEY=ta_cle  node compute-durees.mjs
+//   PRIM_API_KEY=ta_cle  node calculer-durees.mjs
 //
 // Il produit "durees.generated.json" : un objet
 //   { "Nom|Ville": { "dureeMin": 71, "trajet": "RER D puis Bus 402" } }
@@ -62,7 +62,6 @@ const LYCEES = [
   "Lycée Nelson Mandela|Étampes",
   "Lycée Geoffroy Saint-Hilaire|Étampes",
   "Lycée Nikola Tesla|Dourdan",
-  "Lycée Georges Brassens|Évry-Courcouronnes"
 ];
 
 // Corrections manuelles si le géocodage tombe à côté : "Nom|Ville" -> [lat, lon]
@@ -166,6 +165,9 @@ const pause = (ms) => new Promise((r) => setTimeout(r, ms));
     await pause(300);
   }
 
-  fs.writeFileSync("transports.generated.json", JSON.stringify(resultats, null, 2));
+  // Chemin construit depuis l'emplacement du script, et non depuis le dossier
+  // courant : le fichier atterrit toujours dans tools/, où qu'on lance la commande.
+  const sortie = new URL("transports.generated.json", import.meta.url);
+  fs.writeFileSync(sortie, JSON.stringify(resultats, null, 2));
   console.log("\n→ transports.generated.json écrit. Recopie-le dans bdd.js.");
 })();
