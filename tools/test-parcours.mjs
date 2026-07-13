@@ -203,6 +203,34 @@ console.log("\n── SAISIE LIBRE ──");
 }
 
 /* ========================================================================== */
+console.log("\n── CONFIRMATION ÉCRITE (apostrophe courbe des claviers mobiles) ──");
+{
+  const a = monterApplication();
+  if (a) {
+    cliquer(a, boutons(a.doc)[1]);              // « Je connais le domaine »
+    ecrire(a, "je veux réparer des voitures");  // → confirmation Oui/Non
+
+    const ouiNon = tousLesBoutons(a.doc).filter((b) => /^(Oui|Non)$/.test(b.textContent));
+    if (ouiNon.length < 2) {
+      KO("Le bot ne demande pas de confirmation");
+    } else {
+      // L'élève répond au CLAVIER, avec l'apostrophe courbe d'un téléphone.
+      if (ecrire(a, "d\u2019accord")) {
+        const carte = a.doc.querySelectorAll("#cardDetailsContainer .formation-block");
+        if (carte.length) OK("« d\u2019accord » (apostrophe courbe) est compris comme un oui");
+        else KO("« d\u2019accord » avec apostrophe courbe n'est PAS reconnu");
+
+        // Les anciens boutons Oui/Non ne doivent plus être cliquables.
+        const encoreActifs = tousLesBoutons(a.doc)
+          .filter((b) => /^(Oui|Non)$/.test(b.textContent) && !b.disabled);
+        if (!encoreActifs.length) OK("Les boutons Oui/Non sont verrouillés après la réponse écrite");
+        else KO("RÉGRESSION : " + encoreActifs.length + " bouton(s) Oui/Non encore cliquable(s)");
+      }
+    }
+  }
+}
+
+/* ========================================================================== */
 console.log("\n" + "─".repeat(52));
 if (echecs) {
   console.log(`✗ ${echecs} test(s) en échec.`);
