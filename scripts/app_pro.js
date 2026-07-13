@@ -237,6 +237,23 @@ function addBotMessage(text, options, config){
     });
     chatlog.appendChild(optRow);
   }
+  // NE PAS réajouter `row` ici : appendChild sur un élément déjà dans le DOM le
+  // DÉPLACE. La bulle du bot se retrouverait affichée APRÈS les boutons.
+  chatlog.scrollTop = chatlog.scrollHeight;
+}
+
+/* -----------------------------------------------------------------------------
+ * Message de l'élève.
+ * `textContent` et non `innerHTML` : ce que l'élève tape ne doit jamais être
+ * interprété comme du HTML.
+ * -------------------------------------------------------------------------- */
+function addUserMessage(text){
+  const row = document.createElement('div');
+  row.className = 'msg-row user';
+  const bubble = document.createElement('div');
+  bubble.className = 'msg user';
+  bubble.textContent = text;
+  row.appendChild(bubble);
   chatlog.appendChild(row);
   chatlog.scrollTop = chatlog.scrollHeight;
 }
