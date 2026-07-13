@@ -25,4 +25,6 @@
   #   docs.google.com         -> envoi des statistiques anonymes vers le formulaire
   # 'unsafe-inline' pour les styles est nécessaire tant que le code pose des
   # attributs style="" en JavaScript ; il n'est PAS autorisé pour les scripts.
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; form-action https://docs.google.com; connect-src 'self' https://docs.google.com; frame-ancestors 'none'; base-uri 'self'
+
+
+
