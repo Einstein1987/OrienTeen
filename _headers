@@ -1,0 +1,28 @@
+# En-têtes de sécurité HTTP — lus automatiquement par Netlify au déploiement.
+#
+# L'application est statique, sans compte ni authentification : ces en-têtes ne
+# corrigent aucune faille connue, ils réduisent la surface d'attaque si une
+# dépendance ou une page venait à être détournée.
+
+/*
+  # Interdit à un site tiers d'encapsuler l'application dans une iframe
+  # (protection contre le détournement de clic).
+  X-Frame-Options: DENY
+
+  # Le navigateur ne doit pas « deviner » le type d'un fichier servi.
+  X-Content-Type-Options: nosniff
+
+  # Ne transmet l'URL complète qu'aux pages du même site.
+  Referrer-Policy: strict-origin-when-cross-origin
+
+  # Aucune fonctionnalité sensible n'est utilisée, sauf le micro (dictée vocale).
+  Permissions-Policy: camera=(), geolocation=(), payment=(), usb=(), microphone=(self)
+
+  # Content Security Policy : liste blanche stricte des origines autorisées.
+  #   'self'                  -> les scripts et styles de l'application (jsPDF inclus, hébergé localement)
+  #   fonts.googleapis.com    -> feuille de style des polices  (À SUPPRIMER si tu héberges les polices)
+  #   fonts.gstatic.com       -> fichiers de polices           (À SUPPRIMER si tu héberges les polices)
+  #   docs.google.com         -> envoi des statistiques anonymes vers le formulaire
+  # 'unsafe-inline' pour les styles est nécessaire tant que le code pose des
+  # attributs style="" en JavaScript ; il n'est PAS autorisé pour les scripts.
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; form-action https://docs.google.com; connect-src 'self' https://docs.google.com; frame-ancestors 'none'; base-uri 'self'
