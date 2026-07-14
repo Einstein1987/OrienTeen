@@ -314,11 +314,13 @@ function fillCardCustom(selection) {
         new Date().toLocaleDateString("fr-FR");
 
     // Le libellé au-dessus s'adapte : "Établissement" pour une recherche par lycée,
-    // "Famille de métiers / Domaine" sinon.
+    // "Secteur" sinon. Surtout PAS "famille de métiers" : ce terme a un sens
+    // administratif précis (seconde commune ou non) qui n'a rien à voir avec
+    // nos regroupements thématiques.
     const metierLabel = document.getElementById("cardMetierLabel");
     if (metierLabel) {
         metierLabel.textContent =
-            selection.type === 'etab' ? "Établissement" : "Famille de métiers / Domaine";
+            selection.type === 'etab' ? "Établissement" : "Secteur";
     }
     document.getElementById("cardMetier").textContent = selection.label;
 
@@ -472,7 +474,7 @@ function startMenu(message, garderCarte){
   }
   addBotMessage(message || "Bonjour ! Je suis là pour t'aider. Où en es-tu ?", [
     {label: "Je connais déjà la formation que je veux faire", action: "set_state", payload: "search_formation"},
-    {label: "Je connais la famille de métiers ou le domaine qui m'intéresse", action: "set_state", payload: "search_domaine"},
+    {label: "Je sais dans quel secteur je veux travailler", action: "set_state", payload: "search_domaine"},
     {label: "Je connais un lycée et je veux voir ses formations", action: "set_state", payload: "search_etab"},
     {label: "Je suis perdu, j'ai besoin d'aide, je veux faire le quiz", action: "start_quiz", payload: null, style: "help"}
   ]);
@@ -622,7 +624,7 @@ function choisirPisteQuiz(domainKey) {
   selection.sansStat = quizStatEnvoyee;
   quizStatEnvoyee    = true;
   addBotMessage(
-    "Très bien ! Voici ce que propose cette famille de métiers, dans le panneau de droite. " +
+    "Très bien ! Voici ce que propose ce secteur, dans le panneau de droite. " +
     "Tu peux la télécharger en PDF — ou remonter un peu dans la discussion pour cliquer " +
     "sur l'une des deux autres pistes, elles restent disponibles.",
     [
@@ -694,12 +696,29 @@ function searchNotFound(text){
  *      « maintenance » → 9 formations → 3 familles → 3 boutons.
  * ========================================================================== */
 
+/* -----------------------------------------------------------------------------
+ * VOCABULAIRE — à ne pas confondre, l'app en dépend
+ *
+ *   SECTEUR (nos 18 « domaines ») : un regroupement THÉMATIQUE, inventé ici pour
+ *   aider un élève à se repérer. N'existe pas dans Affelnet.
+ *
+ *   FAMILLE DE MÉTIERS (les 14 officielles) : une réalité ADMINISTRATIVE. Elle
+ *   détermine si l'élève entre en seconde COMMUNE (une année pour découvrir
+ *   plusieurs spécialités) ou directement en spécialité. Un CAP n'appartient à
+ *   AUCUNE famille : les familles ne concernent que la seconde professionnelle.
+ *
+ * Le menu disait « la famille de métiers ou le domaine qui m'intéresse », comme
+ * si c'était la même chose. Ça installait la confusion dès la première phrase,
+ * chez l'élève qui devra justement comprendre la différence pour ses vœux.
+ * Ne jamais écrire « famille de métiers » pour parler d'un de nos secteurs.
+ * -------------------------------------------------------------------------- */
+
 const MAX_BOUTONS = 8;
 
-/* Une famille de métiers, restreinte aux formations qui correspondent vraiment
+/* Un secteur (domaine), restreint aux formations qui correspondent vraiment
  * à la recherche. On réutilise la forme d'une sélection « formation » : la
  * fiche affichera un bloc par formation retenue, et rien de plus. */
-function familleSelection(domainKey, formations) {
+function secteurSelection(domainKey, formations) {
   return {
     type: 'formation',
     label: DOMAINS[domainKey].label,
@@ -708,14 +727,14 @@ function familleSelection(domainKey, formations) {
   };
 }
 
-/* Regroupe des résultats [{domainKey, formation}] par famille de métiers. */
-function grouperParFamille(results) {
-  const familles = new Map();
+/* Regroupe des résultats [{domainKey, formation}] par secteur (domaine). */
+function grouperParSecteur(results) {
+  const secteurs = new Map();
   results.forEach(function (r) {
-    if (!familles.has(r.domainKey)) familles.set(r.domainKey, []);
-    familles.get(r.domainKey).push(r.formation);
+    if (!secteurs.has(r.domainKey)) secteurs.set(r.domainKey, []);
+    secteurs.get(r.domainKey).push(r.formation);
   });
-  return familles;
+  return secteurs;
 }
 
 /* L'élève a tapé « bac », « lycée », « formation »… : rien à chercher.
@@ -723,7 +742,7 @@ function grouperParFamille(results) {
 function demanderPrecision(categories) {
   const boutons = [
     { label: "Faire le quiz",             action: "start_quiz", payload: null },
-    { label: "Chercher autre chose",  action: "menu",       payload: null }
+    { label: "Chercher une autre chose",  action: "menu",       payload: null }
   ];
 
   if (categories.indexOf("lieu") !== -1 && categories.indexOf("niveau") === -1) {
@@ -755,14 +774,14 @@ function demanderPrecision(categories) {
   );
 }
 
-/* Trop de résultats : on remonte à la famille de métiers plutôt que de tronquer. */
-function proposerFamilles(results, texteAffiche) {
-  const familles = grouperParFamille(results);
+/* Trop de résultats : on remonte au secteur plutôt que de tronquer. */
+function proposerSecteurs(results, texteAffiche) {
+  const secteurs = grouperParSecteur(results);
 
-  if (familles.size > MAX_BOUTONS) {
+  if (secteurs.size > MAX_BOUTONS) {
     addBotMessage(
       "J'ai trouvé " + results.length + " formations qui correspondent à « " + texteAffiche +
-      " », réparties dans " + familles.size + " familles de métiers. C'est beaucoup trop " +
+      " », réparties dans " + secteurs.size + " secteurs. C'est beaucoup trop " +
       "pour t'être utile. Essaie d'être plus précis, ou fais le quiz.",
       [
         { label: "Reformuler ma recherche", action: "set_state", payload: "search_formation" },
@@ -773,19 +792,19 @@ function proposerFamilles(results, texteAffiche) {
   }
 
   const opts = [];
-  familles.forEach(function (formations, domainKey) {
+  secteurs.forEach(function (formations, domainKey) {
     opts.push({
       label: DOMAINS[domainKey].label + " (" + formations.length +
              (formations.length > 1 ? " formations)" : " formation)"),
       action: "confirm_selection",
-      payload: familleSelection(domainKey, formations)
+      payload: secteurSelection(domainKey, formations)
     });
   });
 
   addBotMessage(
     "« " + texteAffiche + " », ça correspond à " + results.length + " formations : trop " +
-    "pour te les montrer d'un coup. Elles se répartissent dans " + familles.size +
-    " familles de métiers. Laquelle veux-tu regarder ?",
+    "pour te les montrer d'un coup. Elles se répartissent dans " + secteurs.size +
+    " secteurs. Lequel veux-tu regarder ?",
     opts
   );
 }
@@ -836,8 +855,8 @@ function processSearchNettoye(text, type) {
     if (results.length === 1) {
       askConfirm(formationSelection(results[0].domainKey, results[0].formation));
     } else if (results.length > MAX_BOUTONS) {
-      // Règle 3 : on remonte à la famille plutôt que de tronquer arbitrairement.
-      proposerFamilles(results, text);
+      // Règle 3 : on remonte au secteur plutôt que de tronquer arbitrairement.
+      proposerSecteurs(results, text);
     } else if (results.length > 1) {
       const opts = results.map(r => ({
         label: `${r.formation.nom}${r.formation.niveau ? ' (' + r.formation.niveau + ')' : ''}`,
