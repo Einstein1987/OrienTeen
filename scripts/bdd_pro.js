@@ -791,13 +791,13 @@ const DOMAINS = {
         nom: "Bac Pro Hygiène, Propreté, Stérilisation",
         niveau: "Bac Pro",
         coeffs: [
-          4,
-          6,
-          4,
-          2,
+          5,
+          3,
           4,
           3,
-          7
+          5,
+          2,
+          8
         ],
         etablissements: [
           {
@@ -1276,11 +1276,11 @@ const DOMAINS = {
         coeffs: [
           4,
           6,
-          4,
-          2,
+          3,
           4,
           3,
-          7
+          2,
+          8
         ],
         etablissements: [
           {
@@ -1298,13 +1298,13 @@ const DOMAINS = {
         nom: "CAP Électricien",
         niveau: "CAP",
         coeffs: [
-          5,
+          4,
           6,
           3,
           4,
           3,
           2,
-          7
+          8
         ],
         etablissements: [
           {
@@ -1385,13 +1385,13 @@ const DOMAINS = {
         nom: "CAP Installateur en froid et conditionnement d'air",
         niveau: "CAP",
         coeffs: [
-          5,
+          4,
           6,
           3,
-          4,
           3,
-          2,
-          7
+          3,
+          3,
+          8
         ],
         etablissements: [
           {
@@ -1408,13 +1408,13 @@ const DOMAINS = {
         nom: "CAP Monteur en installations thermiques",
         niveau: "CAP",
         coeffs: [
-          5,
+          4,
           6,
           3,
-          4,
           3,
-          2,
-          7
+          3,
+          3,
+          8
         ],
         etablissements: [
           {
@@ -1431,12 +1431,12 @@ const DOMAINS = {
         nom: "CAP Monteur en installations sanitaires",
         niveau: "CAP",
         coeffs: [
-          5,
+          4,
           6,
-          3,
+          4,
+          2,
           4,
           3,
-          2,
           7
         ],
         etablissements: [
@@ -1462,12 +1462,12 @@ const DOMAINS = {
         nom: "CAP Interventions en maintenance technique des bâtiments",
         niveau: "CAP",
         coeffs: [
-          5,
+          4,
           6,
-          3,
+          4,
+          2,
           4,
           3,
-          2,
           7
         ],
         etablissements: [
@@ -1645,12 +1645,12 @@ const DOMAINS = {
         nom: "CAP Maçon",
         niveau: "CAP",
         coeffs: [
-          5,
+          4,
           6,
-          3,
+          4,
+          2,
           4,
           3,
-          2,
           7
         ],
         etablissements: [
@@ -1684,12 +1684,12 @@ const DOMAINS = {
         nom: "CAP Carreleur mosaïste",
         niveau: "CAP",
         coeffs: [
-          5,
+          4,
           6,
-          3,
+          4,
+          2,
           4,
           3,
-          2,
           7
         ],
         etablissements: [
@@ -1707,12 +1707,12 @@ const DOMAINS = {
         nom: "CAP Peintre applicateur de revêtements",
         niveau: "CAP",
         coeffs: [
-          5,
+          4,
           6,
-          3,
+          4,
+          2,
           4,
           3,
-          2,
           7
         ],
         etablissements: [
@@ -1730,12 +1730,12 @@ const DOMAINS = {
         nom: "CAP Menuisier aluminium-verre",
         niveau: "CAP",
         coeffs: [
-          5,
+          4,
           6,
-          3,
+          4,
+          2,
           4,
           3,
-          2,
           7
         ],
         etablissements: [
@@ -1752,14 +1752,20 @@ const DOMAINS = {
       {
         nom: "CAP Métallier",
         niveau: "CAP",
+        // Seule formation ABSENTE de la Fiche technique n°21 (Versailles).
+        // Coefficients repris des COEFFICIENTS NATIONAUX (Annexe 29, groupe 25
+        // « Mécanique, électricité, électronique »). La valeur précédente était
+        // celle du domaine « Bâtiment » — donc issue de l'erreur systématique
+        // corrigée en juillet 2026. À confirmer auprès du CIO.
+        aVerifier: "coefficients non confirmés par la fiche technique n°21 de l'académie de Versailles — demande confirmation à ta PsyEN.",
         coeffs: [
-          5,
+          4,
           6,
           3,
           4,
           3,
           2,
-          7
+          8
         ],
         etablissements: [
           {
@@ -2180,12 +2186,12 @@ const DOMAINS = {
         nom: "Bac Pro Modélisation et prototypage 3D",
         niveau: "Bac Pro",
         coeffs: [
-          4,
+          5,
           6,
-          4,
-          2,
+          3,
           4,
           3,
+          2,
           7
         ],
         etablissements: [
@@ -2204,13 +2210,13 @@ const DOMAINS = {
         nom: "CAP Réalisations industrielles en chaudronnerie ou soudage - Option A : chaudronnerie",
         niveau: "CAP",
         coeffs: [
-          5,
+          4,
           6,
           3,
           4,
           3,
           2,
-          7
+          8
         ],
         etablissements: [
           {
@@ -2239,12 +2245,12 @@ const DOMAINS = {
       "usine"
     ],
     coeffs: [
-      4,
+      5,
       6,
-      4,
-      2,
+      3,
       4,
       3,
+      2,
       7
     ],
     formations: [
@@ -2252,12 +2258,12 @@ const DOMAINS = {
         nom: "Bac Pro Maintenance des systèmes de production connectés",
         niveau: "Bac Pro",
         coeffs: [
-          4,
+          5,
           6,
-          4,
-          2,
+          3,
           4,
           3,
+          2,
           7
         ],
         etablissements: [
@@ -2315,12 +2321,12 @@ const DOMAINS = {
         nom: "CAP Conducteur d'installations de production",
         niveau: "CAP",
         coeffs: [
-          4,
+          5,
           6,
-          4,
-          2,
+          3,
           4,
           3,
+          2,
           7
         ],
         etablissements: [
@@ -2796,13 +2802,13 @@ const DOMAINS = {
         nom: "CAP Cuisine",
         niveau: "CAP",
         coeffs: [
-          5,
           4,
+          6,
           3,
           3,
-          4,
-          4,
-          7
+          3,
+          3,
+          8
         ],
         etablissements: [
           {
@@ -2842,13 +2848,13 @@ const DOMAINS = {
         nom: "CAP Production et service en restaurations (rapide, collective, cafétéria)",
         niveau: "CAP",
         coeffs: [
-          5,
           4,
+          6,
           3,
           3,
-          4,
-          4,
-          7
+          3,
+          3,
+          8
         ],
         etablissements: [
           {

@@ -489,10 +489,58 @@
 
   let elCriteres, elTable, elCarte;
 
+  /* ---------------------------------------------------------------------------
+   * FOCUS CLAVIER ET RECONSTRUCTION
+   *
+   * refresh() reconstruit tout le comparateur en innerHTML. L'élément qui avait
+   * le focus est donc DÉTRUIT, et le focus retombe sur <body>. Concrètement :
+   * un élève qui navigue au clavier coche un critère, et se retrouve renvoyé au
+   * début de la page. Il doit re-tabuler jusqu'où il en était. À chaque clic.
+   * C'est inutilisable sans souris — et un lecteur d'écran n'annonce plus rien.
+   *
+   * Les écouteurs, eux, survivent : ils sont délégués sur `root`. Seul le focus
+   * est à sauver. On le repère par ses attributs `data-*`, qui sont stables
+   * d'une reconstruction à l'autre, et on le repose après.
+   *
+   * On ne reconstruit PAS le focus sur un élément disparu (après une remise à
+   * zéro, par exemple) : dans ce cas on ne fait rien, et le navigateur applique
+   * son comportement normal.
+   * ------------------------------------------------------------------------ */
+
+  // Les attributs qui identifient de façon stable un élément focusable du 2GT.
+  const ATTRIBUTS_FOCUS = ["data-critere", "data-place", "data-strat", "data-action"];
+
+  function repererFocus() {
+    const actif = document.activeElement;
+    if (!actif || actif === document.body) return null;
+    for (let i = 0; i < ATTRIBUTS_FOCUS.length; i++) {
+      const attr = ATTRIBUTS_FOCUS[i];
+      const valeur = actif.getAttribute(attr);
+      if (valeur === null) continue;
+      // On garde aussi le nom de la balise : une même valeur peut exister à la
+      // fois sur un <button> (la puce) et sur un <input type="checkbox">.
+      return actif.tagName.toLowerCase() +
+             "[" + attr + '="' + (window.CSS && CSS.escape ? CSS.escape(valeur) : valeur) + '"]';
+    }
+    return null;
+  }
+
+  function reposerFocus(selecteur, root) {
+    if (!selecteur || !root) return;
+    let cible = null;
+    try { cible = root.querySelector(selecteur); } catch (e) { return; }
+    // L'élément a disparu (remise à zéro) : on laisse le navigateur décider.
+    if (!cible || typeof cible.focus !== "function") return;
+    cible.focus({ preventScroll: true });
+  }
+
   function refresh() {
+    const racine = elCriteres && elCriteres.closest ? elCriteres.closest("#vue-2gt") : null;
+    const selecteur = repererFocus();
     renderCriteres(elCriteres);
     renderTable(elTable);
     renderCarte(elCarte);
+    reposerFocus(selecteur, racine || document);
   }
 
   function togglePlace(id) {
