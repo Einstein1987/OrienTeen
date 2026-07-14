@@ -19,8 +19,8 @@
 .gt-filet {
   display: flex; gap: 12px; align-items: flex-start;
   background: var(--success-soft, #ECFDF5);
-  border: 1px solid var(--teal, #10B981);
-  border-left: 5px solid var(--teal, #10B981);
+  border: 1px solid var(--teal, #047857);
+  border-left: 5px solid var(--teal, #047857);
   border-radius: 12px;
   padding: 14px 16px;
 }
@@ -32,13 +32,13 @@
 .gt-criteres { background: var(--paper2, #FFFFFF); border: 1px solid var(--line, #E2E8F0);
                border-radius: 16px; padding: 18px 20px; }
 .gt-criteres h3 { margin: 0 0 4px; font-size: 1rem; color: var(--ink, #0F172A); }
-.gt-criteres .gt-hint { margin: 0 0 14px; font-size: .85rem; color: var(--muted, #64748B); }
+.gt-criteres .gt-hint { margin: 0 0 14px; font-size: .85rem; color: var(--muted, #5C6B80); }
 
 .gt-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .gt-chip {
   display: inline-flex; align-items: center; gap: 7px;
-  border: 2px solid var(--brass, #6366F1);
-  color: var(--brass, #6366F1);
+  border: 2px solid var(--brass, #4F46E5);
+  color: var(--brass, #4F46E5);
   background: transparent;
   border-radius: 999px;
   padding: 8px 14px;
@@ -46,9 +46,9 @@
   cursor: pointer;
   transition: background .15s, color .15s, transform .1s;
 }
-.gt-chip:hover { background: var(--brass, #6366F1); color: #fff; }
+.gt-chip:hover { background: var(--brass, #4F46E5); color: #fff; }
 .gt-chip:active { transform: scale(.97); }
-.gt-chip[aria-pressed="true"] { background: var(--brass, #6366F1); color: #fff; }
+.gt-chip[aria-pressed="true"] { background: var(--brass, #4F46E5); color: #fff; }
 .gt-chip .gt-chip-box {
   width: 15px; height: 15px; border-radius: 4px;
   border: 2px solid currentColor; flex-shrink: 0;
@@ -60,11 +60,11 @@
 
 .gt-actions { margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; }
 .gt-btn {
-  border: 2px solid var(--brass, #6366F1); background: var(--brass, #6366F1); color: #fff;
+  border: 2px solid var(--brass, #4F46E5); background: var(--brass, #4F46E5); color: #fff;
   border-radius: 999px; padding: 9px 18px;
   font: inherit; font-weight: 700; font-size: .88rem; cursor: pointer;
 }
-.gt-btn:hover { background: var(--brass-dark, #4F46E5); border-color: var(--brass-dark, #4F46E5); }
+.gt-btn:hover { background: var(--brass-dark, #4338CA); border-color: var(--brass-dark, #4338CA); }
 .gt-btn.gt-btn-ghost { background: transparent; color: var(--muted-strong, #475569); border-color: var(--line, #E2E8F0); }
 .gt-btn.gt-btn-ghost:hover { background: var(--soft, #F8FAFC); color: var(--ink, #0F172A); }
 
@@ -89,17 +89,19 @@ table.gt-table th.gt-row-head {
   text-align: left; font-weight: 600; color: var(--ink, #0F172A);
   background: var(--soft, #F8FAFC); white-space: nowrap;
 }
-table.gt-table tbody tr.is-checked th.gt-row-head { background: #EEF2FF; color: var(--brass-dark, #4F46E5); }
-table.gt-table tbody tr.is-checked td.gt-yes      { background: #EEF2FF; }
+table.gt-table tbody tr.is-checked th.gt-row-head { background: var(--brass-soft, #EEF2FF); color: var(--brass-dark, #4338CA); }
+table.gt-table tbody tr.is-checked td.gt-yes      { background: var(--brass-soft, #EEF2FF); }
 
-.gt-yes  { color: var(--brass, #6366F1); font-weight: 700; }
-.gt-no   { color: var(--line, #E2E8F0); }
+.gt-yes  { color: var(--brass, #4F46E5); font-weight: 700; }
+/* Le « — » signale un critère ABSENT : c'est une information, pas un décor.
+   Était en var(--line) → 1,23:1, illisible. Passé en var(--muted) → 5,43:1. */
+.gt-no   { color: var(--muted, #5C6B80); }
 .gt-pass { display: inline-block; margin-top: 2px; font-size: .65rem; font-weight: 700;
            color: #B45309; background: #FEF3C7; border-radius: 4px; padding: 1px 5px; }
 
 table.gt-table tr.gt-sep td, table.gt-table tr.gt-sep th {
   background: var(--soft, #F8FAFC); font-size: .72rem; text-transform: uppercase;
-  letter-spacing: .05em; color: var(--muted, #64748B); text-align: left; font-weight: 700;
+  letter-spacing: .05em; color: var(--muted, #5C6B80); text-align: left; font-weight: 700;
   padding: 7px 12px;
 }
 table.gt-table tfoot td, table.gt-table tfoot th {
@@ -109,7 +111,7 @@ table.gt-table tfoot td, table.gt-table tfoot th {
   display: inline-block; min-width: 26px; padding: 2px 8px; border-radius: 999px;
   background: var(--line, #E2E8F0); color: var(--muted-strong, #475569); font-weight: 700;
 }
-.gt-score-badge.is-top { background: var(--brass, #6366F1); color: #fff; }
+.gt-score-badge.is-top { background: var(--brass, #4F46E5); color: #fff; }
 
 /* ---------- Carte de sortie ---------- */
 .gt-card { background: var(--paper2, #FFFFFF); border: 1px solid var(--line, #E2E8F0);
@@ -121,7 +123,7 @@ table.gt-table tfoot td, table.gt-table tfoot th {
 .gt-card-head h3 { margin: 0; font-size: 1.05rem; }
 .gt-card-head .gt-date { font-size: .8rem; opacity: .8; font-variant-numeric: tabular-nums; }
 .gt-card-body { padding: 18px 20px; }
-.gt-empty { color: var(--muted, #64748B); font-size: .9rem; margin: 0; }
+.gt-empty { color: var(--muted, #5C6B80); font-size: .9rem; margin: 0; }
 
 ol.gt-voeux { list-style: none; margin: 0; padding: 0; counter-reset: v; }
 ol.gt-voeux > li {
@@ -133,20 +135,20 @@ ol.gt-voeux > li:last-child { border-bottom: none; }
 ol.gt-voeux > li::before {
   content: counter(v);
   flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
-  background: var(--brass, #6366F1); color: #fff;
+  background: var(--brass, #4F46E5); color: #fff;
   display: inline-flex; align-items: center; justify-content: center;
   font-size: .8rem; font-weight: 700;
 }
-ol.gt-voeux > li.is-filet::before { background: var(--teal, #10B981); }
+ol.gt-voeux > li.is-filet::before { background: var(--teal, #047857); }
 .gt-v-main   { font-weight: 700; color: var(--ink, #0F172A); }
 .gt-v-lyc    { color: var(--muted-strong, #475569); font-weight: 400; }
 .gt-v-code   { font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-               font-size: .78rem; color: var(--muted, #64748B); background: var(--soft, #F8FAFC);
+               font-size: .78rem; color: var(--muted, #5C6B80); background: var(--soft, #F8FAFC);
                border: 1px solid var(--line, #E2E8F0); border-radius: 4px; padding: 1px 6px; margin-left: 6px; }
 .gt-v-note   { display: block; margin-top: 4px; font-size: .8rem; color: var(--muted-strong, #475569); line-height: 1.45; }
 .gt-v-note.is-warn { color: #92400E; }
 .gt-tag-filet { display: inline-block; font-size: .68rem; font-weight: 700; color: #065F46;
-                background: var(--success-soft, #ECFDF5); border: 1px solid var(--teal, #10B981);
+                background: var(--success-soft, #ECFDF5); border: 1px solid var(--teal, #047857);
                 border-radius: 4px; padding: 1px 6px; margin-left: 6px; }
 
 .gt-aside { margin-top: 18px; padding-top: 16px; border-top: 1px dashed var(--line, #E2E8F0); }
@@ -154,7 +156,7 @@ ol.gt-voeux > li.is-filet::before { background: var(--teal, #10B981); }
 .gt-aside ul { margin: 0; padding-left: 18px; }
 .gt-aside li { font-size: .85rem; color: var(--muted-strong, #475569); margin-bottom: 5px; line-height: 1.45; }
 
-.gt-source { margin-top: 16px; font-size: .75rem; color: var(--muted, #64748B); line-height: 1.5; }
+.gt-source { margin-top: 16px; font-size: .75rem; color: var(--muted, #5C6B80); line-height: 1.5; }
 
 @media (max-width: 640px) {
   .gt-card-head { flex-direction: column; align-items: flex-start; gap: 4px; }
@@ -174,14 +176,14 @@ ol.gt-voeux > li.is-filet::before { background: var(--teal, #10B981); }
 .gt-strat { border: 2px solid var(--line, #E2E8F0); background: transparent;
             color: var(--muted-strong, #475569); border-radius: 999px;
             padding: 7px 16px; font: inherit; font-size: .85rem; font-weight: 700; cursor: pointer; }
-.gt-strat:hover { border-color: var(--brass, #6366F1); color: var(--brass, #6366F1); }
-.gt-strat.is-on { background: var(--brass, #6366F1); border-color: var(--brass, #6366F1); color: #fff; }
-.gt-strat-hint { margin: 10px 0 0; font-size: .82rem; color: var(--muted, #64748B); line-height: 1.45; }
+.gt-strat:hover { border-color: var(--brass, #4F46E5); color: var(--brass, #4F46E5); }
+.gt-strat.is-on { background: var(--brass, #4F46E5); border-color: var(--brass, #4F46E5); color: #fff; }
+.gt-strat-hint { margin: 10px 0 0; font-size: .82rem; color: var(--muted, #5C6B80); line-height: 1.45; }
 
 /* ---------- Deux groupes de critères ---------- */
 .gt-groupe { margin: 20px 0 4px; font-size: .95rem; color: var(--ink, #0F172A); }
 .gt-groupe:first-of-type { margin-top: 12px; }
-.gt-groupe-sub { font-weight: 400; font-size: .8rem; color: var(--muted, #64748B); }
+.gt-groupe-sub { font-weight: 400; font-size: .8rem; color: var(--muted, #5C6B80); }
 .gt-alerte { margin: 12px 0 0; padding: 10px 13px; border-radius: 10px;
              background: #FEF3C7; border: 1px solid #FCD34D;
              font-size: .84rem; color: #92400E; line-height: 1.45; }
@@ -191,15 +193,15 @@ ol.gt-voeux > li.is-filet::before { background: var(--teal, #10B981); }
 
 /* ---------- Trajet sur chaque vœu ---------- */
 .gt-v-trajet { display: block; margin-top: 4px; font-size: .8rem;
-               color: var(--muted, #64748B); }
+               color: var(--muted, #5C6B80); }
 
 /* ---------- Astuce section euro + rappel des 2 options ---------- */
 .gt-euro-tip { margin: 0 0 12px; padding: 11px 14px; border-radius: 10px;
-               background: #EEF2FF; border: 1px solid var(--brass, #6366F1);
-               border-left: 4px solid var(--brass, #6366F1);
+               background: var(--brass-soft, #EEF2FF); border: 1px solid var(--brass, #4F46E5);
+               border-left: 4px solid var(--brass, #4F46E5);
                font-size: .85rem; color: var(--muted-strong, #475569); line-height: 1.5; }
-.gt-euro-tip strong { color: var(--brass-dark, #4F46E5); }
-.gt-rappel-deux { margin: 0 0 14px; font-size: .82rem; color: var(--muted, #64748B);
+.gt-euro-tip strong { color: var(--brass-dark, #4338CA); }
+.gt-rappel-deux { margin: 0 0 14px; font-size: .82rem; color: var(--muted, #5C6B80);
                   line-height: 1.5; padding-left: 12px;
                   border-left: 3px solid var(--line, #E2E8F0); }
 
@@ -207,8 +209,8 @@ ol.gt-voeux > li.is-filet::before { background: var(--teal, #10B981); }
 .gt-v-atouts { display: block; margin-top: 5px; font-size: .82rem;
                color: #92400E; background: #FFFBEB; border: 1px solid #FDE68A;
                border-radius: 8px; padding: 6px 10px; line-height: 1.45; }
-ol.gt-voeux > li.is-simple::before { background: var(--muted, #64748B); }
-.gt-aside-hint { margin: 0 0 8px; font-size: .8rem; color: var(--muted, #64748B); line-height: 1.45; }
+ol.gt-voeux > li.is-simple::before { background: var(--muted, #5C6B80); }
+.gt-aside-hint { margin: 0 0 8px; font-size: .8rem; color: var(--muted, #5C6B80); line-height: 1.45; }
 
 /* ---------- Trajet long (> 45 min) : à voir, sans décider à la place de l'élève ---------- */
 .gt-v-trajet.is-loin { color: #92400E; background: #FFFBEB; border: 1px solid #FDE68A;
@@ -226,10 +228,10 @@ table.gt-table .gt-lyc-meta.is-loin { color: #FCD34D; opacity: 1; }
   transition: background .15s, color .15s, border-color .15s;
 }
 .tab sup { font-size: .65em; }
-.tab:hover { border-color: var(--brass, #6366F1); color: var(--brass, #6366F1); }
+.tab:hover { border-color: var(--brass, #4F46E5); color: var(--brass, #4F46E5); }
 .tab.is-active {
-  background: var(--brass, #6366F1);
-  border-color: var(--brass, #6366F1);
+  background: var(--brass, #4F46E5);
+  border-color: var(--brass, #4F46E5);
   color: #fff;
 }
 .vue { display: none; }
@@ -249,7 +251,7 @@ li.gt-sep-li strong { display: block; color: var(--ink, #0F172A); font-size: .9r
 li.gt-sep-li span { display: block; font-size: .83rem; color: var(--muted-strong, #475569); line-height: 1.5; }
 
 ol.gt-voeux > li.is-complement::before { background: var(--paper2, #FFFFFF);
-                                         color: var(--muted, #64748B);
+                                         color: var(--muted, #5C6B80);
                                          border: 2px solid var(--line, #E2E8F0); }
 ol.gt-voeux > li.is-complement .gt-v-main { color: var(--muted-strong, #475569); }
 .gt-tag-couv { display: inline-block; font-size: .68rem; font-weight: 700;
@@ -316,7 +318,7 @@ ol.gt-voeux > li.is-hors-limite::before { background: #FCA5A5 !important;
   li.gt-limite-li { break-inside: avoid; page-break-inside: avoid; }
 
   /* Les vœux hors limite restent lisibles à l'impression */
-  ol.gt-voeux > li.is-hors-limite { opacity: 1 !important; color: var(--muted, #64748B) !important; }
+  ol.gt-voeux > li.is-hors-limite { opacity: 1 !important; color: var(--muted, #5C6B80) !important; }
 
   .gt-unseul, .gt-euro-tip, .gt-compteur, .gt-limite-li > div, .gt-sep-li > div {
     break-inside: avoid;

@@ -55,19 +55,53 @@
   font-display: swap;
   src: url('fonts/space-mono-v17-latin_latin-ext-700.woff2') format('woff2');
 }
+/* -----------------------------------------------------------------------------
+ * Palette — contrastes WCAG 2.1 AA vérifiés (tools/verifier-contrastes.mjs).
+ *
+ * Règle : toute couleur listée ici sert AUSSI BIEN de texte que de fond.
+ * Elle doit donc tenir 4,5:1 dans les deux sens — sur blanc, et avec du blanc
+ * par-dessus. C'est ce qui a manqué : #10B981 et #6366F1 étaient jolis, mais
+ * illisibles pour un élève qui voit mal, sur un écran de fond de classe, ou
+ * simplement sur un Chromebook au soleil.
+ *
+ * Ratios (sur blanc / blanc par-dessus) :
+ *   --brass      #4F46E5 → 6,29 / 6,29
+ *   --brass-dark #4338CA → 7,90 / 7,90
+ *   --teal       #047857 → 5,48 / 5,48
+ *   --muted      #5C6B80 → 5,43 (et 4,95 sur --paper, le pire cas)
+ * -------------------------------------------------------------------------- */
 :root{
      --ink: #0F172A;       /* Bleu nuit très profond pour le texte */
      --paper: #F1F5F9;     /* Gris-bleu très clair pour le fond de page */
      --paper2: #FFFFFF;    /* Blanc pur pour les bulles et panneaux */
-     --brass: #6366F1;     /* Violet/Indigo très dynamique (couleur primaire) */
-     --brass-dark: #4F46E5;/* Indigo foncé au survol */
-     --teal: #10B981;      /* Vert menthe pour le texte validé/succès */
-     --line: #E2E8F0;      /* Gris très doux pour les bordures */
-     --muted: #64748B;
+     --brass: #4F46E5;     /* Indigo primaire — texte ET fond (était #6366F1, 4,47:1) */
+     --brass-dark: #4338CA;/* Indigo foncé au survol (était #4F46E5) */
+     --brass-soft: #EEF2FF;/* Fond indigo très clair (lignes cochées, encadrés) */
+     --teal: #047857;      /* Vert succès — texte ET fond (était #10B981, 2,54:1) */
+     --line: #E2E8F0;      /* Gris très doux pour les bordures (décoratif) */
+     --muted: #5C6B80;     /* Texte secondaire (était #64748B, 4,34:1 sur --paper) */
      --muted-strong: #475569;
      --soft: #F8FAFC;
      --success-soft: #ECFDF5;
 }
+/* -----------------------------------------------------------------------------
+ * Focus clavier — visible partout, y compris sur les fonds sombres.
+ *
+ * Un élève qui navigue au clavier (ou avec un lecteur d'écran) doit toujours
+ * savoir où il est. `:focus-visible` n'apparaît PAS au clic à la souris :
+ * aucun contour disgracieux pour les autres.
+ * -------------------------------------------------------------------------- */
+:focus-visible {
+     outline: 3px solid var(--brass-dark);
+     outline-offset: 2px;
+     border-radius: 4px;
+}
+.card-top :focus-visible,
+.card-action-btn:focus-visible,
+table.gt-table thead th :focus-visible {
+     outline-color: #FFFFFF;   /* sur fond --ink, l'indigo ne se verrait pas */
+}
+
 body{
      margin:0;
      background:var(--paper);
@@ -241,7 +275,7 @@ h1 {
      background:var(--brass);
      color:#fff;
      transform: translateY(-1px);
-     box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2);
+     box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
 }
 .opt-help {
      border-color: var(--teal);
@@ -250,7 +284,7 @@ h1 {
 .opt-help:hover {
      background: var(--teal);
      color: #FFFFFF;
-     box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+     box-shadow: 0 4px 6px -1px rgba(4, 120, 87, 0.2);
 }
 .composer{
      display:flex;
@@ -300,7 +334,7 @@ h1 {
      background:var(--brass-dark);
 }
 .mic-note{
-     font-size:11px;color:#8a8470;
+     font-size:11px;color:var(--muted-strong);
      margin-top:6px;
 }
 /* -- DESIGN DE LA CARTE (Hiérarchie Formation -> Lycée) -- */
@@ -359,13 +393,13 @@ h1 {
      margin-bottom:0;
 }
 .school-location{
-     color:#5b5646;
+     color:var(--muted-strong);
      font-size:11.5px;
      margin-top:2px;
      line-height:1.3;
 }
 .school-transport{
-     color:#5b5646;
+     color:var(--muted-strong);
      font-size:11.5px;
      margin-top:2px;
      line-height:1.3;
@@ -400,7 +434,7 @@ h1 {
      margin-bottom: 4px;
      font-size: 0.8rem;
      font-weight: 700;
-     color: #555;
+     color: var(--muted-strong);
      text-transform: uppercase;
      letter-spacing: 0.03em;
 }
@@ -445,7 +479,7 @@ h1 {
      padding: 15px 20px;
      text-align: center;
      font-size: 13px;
-     color: #8a8470;
+     color: var(--muted-strong);
      background: var(--paper2);
 }
 .app-footer-minimal a {
