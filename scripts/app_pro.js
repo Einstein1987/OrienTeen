@@ -723,7 +723,7 @@ function grouperParFamille(results) {
 function demanderPrecision(categories) {
   const boutons = [
     { label: "Faire le quiz",             action: "start_quiz", payload: null },
-    { label: "Chercher une autre chose",  action: "menu",       payload: null }
+    { label: "Chercher autre chose",  action: "menu",       payload: null }
   ];
 
   if (categories.indexOf("lieu") !== -1 && categories.indexOf("niveau") === -1) {
