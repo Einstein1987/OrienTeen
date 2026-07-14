@@ -122,9 +122,9 @@ console.log("\n\u2500\u2500 PDF DE LA FICHE D'ORIENTATION \u2500\u2500");
 {
   // On remplit la fiche comme le ferait un élève : domaine → recherche → oui.
   const menu = boutons();
-  const domaine = menu.find((b) => /domaine|famille/i.test(b.textContent));
+  const domaine = menu.find((b) => /secteur/i.test(b.textContent));
   if (!domaine) {
-    KO("Le bouton « domaine » est introuvable dans le menu");
+    KO("Le bouton « secteur » est introuvable dans le menu");
   } else {
     clic(domaine);
     doc.getElementById("userInput").value = "electricite";

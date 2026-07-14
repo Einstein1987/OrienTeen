@@ -277,7 +277,11 @@ console.log("\n── RECHERCHES GÉNÉRIQUES ──");
     const idx = { formation: 0, domaine: 1, etab: 2 }[etat];
     const cible = menu[idx];
     if (!cible) { KO("Menu : bouton « " + etat + " » introuvable — l'ordre a changé ?"); return null; }
-    if (!/formation|domaine|famille|lyc/i.test(cible.textContent)) {
+    // Le libellé du menu doit rester cohérent avec le mode testé. Ne PAS accepter
+    // « famille » ici : ce mot a été retiré du menu à dessein (il désignait à tort
+    // un secteur). Si quelqu'un le remet, ce test doit le signaler.
+    const attendu = { formation: /formation/i, domaine: /secteur/i, etab: /lyc/i }[etat];
+    if (!attendu.test(cible.textContent)) {
       KO("Menu : le bouton " + idx + " ne correspond pas à « " + etat + " » (« " + cible.textContent + " »)");
       return null;
     }
