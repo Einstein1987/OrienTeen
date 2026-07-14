@@ -21,8 +21,32 @@
  *   du ministère de l'Agriculture). Ses coefficients restent À VÉRIFIER.
  * ========================================================================== */
 
+// -----------------------------------------------------------------------------
+// SECTEUR vs FAMILLE DE MÉTIERS — la distinction est structurante, pas cosmétique
+//
+// Les 18 clés ci-dessous sont nos SECTEURS : un regroupement thématique, inventé
+// pour aider un élève de 3e à se repérer. Ça n'existe pas dans Affelnet.
+//
+// Le champ `famille` porte, lui, le nom OFFICIEL de la famille de métiers
+// (source : DGESCO, « L'organisation de la classe de seconde professionnelle par
+// famille de métiers », mai 2024). C'est une réalité administrative : elle dit si
+// l'élève entre en SECONDE COMMUNE — une année pour découvrir plusieurs
+// spécialités avant de choisir — ou directement en spécialité.
+//
+// Trois règles à ne jamais perdre de vue :
+//   1. `famille: null` → ce secteur ne correspond à AUCUNE famille officielle.
+//      Toutes ses formations sont hors famille (sécurité, santé-social, mode,
+//      conduite, paysage).
+//   2. Une formation avec `horsFamille: true` est hors famille MÊME SI son
+//      secteur en a une (ex. Optique Photonique dans « transitions numérique »).
+//   3. UN CAP N'EST JAMAIS DANS UNE FAMILLE. Les familles ne concernent que la
+//      seconde professionnelle. C'est cette confusion qui avait produit 13
+//      coefficients faux : les CAP héritaient de ceux de leur secteur.
+// -----------------------------------------------------------------------------
+
 const DOMAINS = {
   relation_client: {
+    famille: "Métiers de la relation client",
     label: "Métiers de la Relation Client",
     keywords: [
       "commerce",
@@ -338,6 +362,7 @@ const DOMAINS = {
     ]
   },
   gestion_logistique: {
+    famille: "Métiers de la gestion administrative, du transport et de la logistique",
     label: "Métiers de la Gestion, du Transport et de la Logistique",
     keywords: [
       "gestion",
@@ -567,6 +592,7 @@ const DOMAINS = {
     ]
   },
   conduite: {
+    famille: null,   // pas une famille de métiers officielle
     label: "Métiers de la Conduite",
     keywords: [
       "conducteur",
@@ -645,6 +671,7 @@ const DOMAINS = {
     ]
   },
   sante_social: {
+    famille: null,   // pas une famille de métiers officielle
     label: "Santé, Social, Soin et Animation",
     keywords: [
       "sante",
@@ -900,6 +927,7 @@ const DOMAINS = {
     ]
   },
   beaute: {
+    famille: "Métiers de la beauté et du bien-être",
     label: "Métiers de la Beauté et du Bien-être",
     keywords: [
       "beaute",
@@ -995,6 +1023,7 @@ const DOMAINS = {
     ]
   },
   numerique_energie: {
+    famille: "Métiers des transitions numérique et énergétique",
     label: "Transitions Numérique et Énergétique",
     keywords: [
       "informatique",
@@ -1484,6 +1513,7 @@ const DOMAINS = {
     ]
   },
   batiment: {
+    famille: "Métiers de la construction durable, du bâtiment et des travaux publics",
     label: "Construction, Bâtiment et Travaux Publics",
     keywords: [
       "batiment",
@@ -1781,6 +1811,7 @@ const DOMAINS = {
     ]
   },
   etudes_batiment: {
+    famille: "Métiers des études et de la modélisation numérique du bâtiment",
     label: "Études et Modélisation Numérique du Bâtiment",
     keywords: [
       "etudes du batiment",
@@ -1899,6 +1930,7 @@ const DOMAINS = {
     ]
   },
   agencement_bois: {
+    famille: "Métiers de l'agencement, de la menuiserie et de l'ameublement",
     label: "Agencement, Menuiserie et Ameublement",
     keywords: [
       "menuiserie",
@@ -2055,6 +2087,7 @@ const DOMAINS = {
     ]
   },
   realisation_mecanique: {
+    famille: "Métiers de la réalisation d'ensembles mécaniques et industriels",
     label: "Réalisation d'Ensembles Mécaniques et Industriels",
     keywords: [
       "usinage",
@@ -2232,6 +2265,7 @@ const DOMAINS = {
     ]
   },
   pilotage_maintenance: {
+    famille: "Métiers du pilotage et de la maintenance d'installations automatisées",
     label: "Pilotage et Maintenance d'Installations Automatisées",
     keywords: [
       "automatisme",
@@ -2343,6 +2377,7 @@ const DOMAINS = {
     ]
   },
   maintenance_vehicules: {
+    famille: "Métiers de la maintenance des matériels et des véhicules",
     label: "Maintenance des Matériels et des Véhicules",
     keywords: [
       "voiture",
@@ -2607,6 +2642,7 @@ const DOMAINS = {
     ]
   },
   aeronautique: {
+    famille: "Métiers de l'aéronautique",
     label: "Métiers de l'Aéronautique",
     keywords: [
       "aeronautique",
@@ -2726,6 +2762,7 @@ const DOMAINS = {
     ]
   },
   hotellerie_restauration: {
+    famille: "Métiers de l'hôtellerie-restauration",
     label: "Métiers de l'Hôtellerie et de la Restauration",
     keywords: [
       "cuisine",
@@ -2894,6 +2931,7 @@ const DOMAINS = {
     ]
   },
   alimentation: {
+    famille: "Métiers de l'alimentation",
     label: "Métiers de l'Alimentation",
     keywords: [
       "boulanger",
@@ -2969,6 +3007,7 @@ const DOMAINS = {
     ]
   },
   securite: {
+    famille: null,   // pas une famille de métiers officielle
     label: "Métiers de la Sécurité",
     keywords: [
       "securite",
@@ -3057,6 +3096,7 @@ const DOMAINS = {
     ]
   },
   mode_art: {
+    famille: null,   // pas une famille de métiers officielle
     label: "Métiers de la Mode, du Cuir et de l'Artisanat d'Art",
     keywords: [
       "couture",
@@ -3237,6 +3277,7 @@ const DOMAINS = {
     ]
   },
   nature_paysage: {
+    famille: null,   // pas une famille de métiers officielle
     label: "Nature, Jardin et Paysage",
     keywords: [
       "paysage",

@@ -106,19 +106,45 @@ function matchEtablissementsDetailed(text){
 
 // --- Construction des "sélections" affichées dans la carte -------------------
 // Une sélection décrit ce qu'on va afficher : un libellé + une liste de formations.
+/* -----------------------------------------------------------------------------
+ * Chaque formation affichée doit savoir de quel SECTEUR elle vient : c'est ce
+ * qui permet de retrouver sa FAMILLE DE MÉTIERS au moment du rendu.
+ *
+ * On travaille sur des COPIES. `domainSelection` renvoyait jusqu'ici les objets
+ * de DOMAINS directement : y écrire un champ polluerait la base pour toute la
+ * session, et une recherche par lycée (qui filtre les établissements) finirait
+ * par amputer les données d'origine.
+ * -------------------------------------------------------------------------- */
+function avecSecteur(domainKey, formations){
+  return formations.map(f => ({ ...f, _secteur: domainKey }));
+}
+
+/* La famille de métiers OFFICIELLE d'une formation, ou null.
+ *
+ * Un CAP n'est JAMAIS dans une famille : les familles ne concernent que la
+ * seconde professionnelle. Un bac pro marqué `horsFamille` non plus, même si
+ * son secteur en a une (ex. Optique Photonique). */
+function familleDe(formation){
+  if (!formation || formation.niveau === 'CAP') return null;
+  if (formation.horsFamille) return null;
+  const secteur = DOMAINS[formation._secteur];
+  return (secteur && secteur.famille) || null;
+}
+
 function domainSelection(domainKey){
   const d = DOMAINS[domainKey];
-  return { type: 'domaine', label: d.label, formations: d.formations, statKey: domainKey };
+  return { type: 'domaine', label: d.label, formations: avecSecteur(domainKey, d.formations), statKey: domainKey };
 }
 
 function formationSelection(domainKey, formation){
-  return { type: 'formation', label: DOMAINS[domainKey].label, formations: [formation], statKey: domainKey };
+  return { type: 'formation', label: DOMAINS[domainKey].label, formations: avecSecteur(domainKey, [formation]), statKey: domainKey };
 }
 
 function etablissementSelection(group){
   // Pour un lycée donné, on ne garde que CE lycée dans chaque bloc formation.
   const formations = group.items.map(item => ({
     ...item.formation,
+    _secteur: item.domainKey,
     etablissements: [item.etab]
   }));
   return {
@@ -326,9 +352,7 @@ function fillCardCustom(selection) {
 
     const container = document.getElementById("cardDetailsContainer");
     container.innerHTML = "";
-    selection.formations.forEach(formation => {
-        container.appendChild(createFormationBlock(formation));
-    });
+    rendreParFamille(container, selection.formations);
 
     const cardActions = document.getElementById("cardActions");
     if (cardActions) {
@@ -341,6 +365,107 @@ function fillCardCustom(selection) {
     }
   
     pingStatsForSelection(selection);
+}
+
+/* =============================================================================
+ * RENDU DE LA CARTE — trois sections, dans cet ordre
+ *
+ *   1. FAMILLES DE MÉTIERS   une section par famille officielle concernée.
+ *                            L'élève entre en seconde COMMUNE : une année pour
+ *                            découvrir plusieurs spécialités avant de choisir.
+ *   2. BACS PRO HORS FAMILLE il choisit sa spécialité dès la seconde. Pas
+ *                            d'année de découverte. Engagement plus ferme.
+ *   3. CAP                   hors du système des familles PAR NATURE : les
+ *                            familles ne concernent que la seconde pro.
+ *
+ * Pourquoi trois et pas deux : la maquette initiale prévoyait « familles » puis
+ * « hors famille ». Mais les 33 CAP sont tous hors famille — ils s'y seraient
+ * noyés avec les 11 bacs pro hors famille, et l'élève aurait perdu de vue
+ * l'information qui lui importe le plus : CAP ou Bac Pro ?
+ * Cette structure reste exacte administrativement, tout en restant lisible.
+ * ========================================================================== */
+
+function rendreParFamille(container, formations) {
+  const familles   = new Map();   // famille officielle → [formations]
+  const horsFamille = [];         // bacs pro hors famille
+  const caps        = [];         // CAP (jamais dans une famille)
+
+  formations.forEach(function (f) {
+    if (f.niveau === 'CAP') { caps.push(f); return; }
+    const fam = familleDe(f);
+    if (!fam) { horsFamille.push(f); return; }
+    if (!familles.has(fam)) familles.set(fam, []);
+    familles.get(fam).push(f);
+  });
+
+  familles.forEach(function (liste, nomFamille) {
+    container.appendChild(sectionFamille(nomFamille, liste));
+  });
+
+  if (horsFamille.length) {
+    container.appendChild(sectionSimple(
+      "Bacs pro hors famille de métiers",
+      "Tu choisis cette spécialité directement dès la seconde : il n'y a pas d'année " +
+      "commune pour en découvrir d'autres avant de te décider.",
+      horsFamille, "hors-famille"));
+  }
+
+  if (caps.length) {
+    container.appendChild(sectionSimple(
+      "CAP",
+      "Les CAP ne font partie d'aucune famille de métiers : tu entres directement " +
+      "dans la spécialité. Le CAP se prépare en 2 ans, le bac pro en 3 ans.",
+      caps, "cap"));
+  }
+}
+
+/* Une section « famille de métiers » : le bandeau explique la seconde commune. */
+function sectionFamille(nomFamille, formations) {
+  const section = document.createElement("section");
+  section.className = "carte-section carte-section-famille";
+
+  const titre = document.createElement("h3");
+  titre.className = "carte-section-titre";
+  titre.textContent = nomFamille;
+  section.appendChild(titre);
+
+  const note = document.createElement("p");
+  note.className = "carte-section-note";
+  // Une seule formulation, VRAIE quel que soit le chemin de recherche.
+  //
+  // Une version précédente disait, quand une seule spécialité s'affichait :
+  // « les autres spécialités de cette famille ne sont pas proposées en Essonne ».
+  // C'était faux dès qu'on cherchait par LYCÉE : le MELEC existe dans 12 lycées
+  // de l'Essonne, simplement pas dans celui qu'on regardait. La carte ne doit
+  // jamais affirmer quelque chose qui dépend du chemin par lequel l'élève est
+  // arrivé — il n'a aucun moyen de savoir que la phrase est conditionnelle.
+  note.textContent =
+    "Famille de métiers : tu entres en seconde commune. C'est une année pour " +
+    "découvrir plusieurs spécialités avant de choisir la tienne, à la fin de " +
+    "l'année de seconde.";
+  section.appendChild(note);
+
+  formations.forEach(function (f) { section.appendChild(createFormationBlock(f)); });
+  return section;
+}
+
+/* Une section sans famille : hors famille, ou CAP. */
+function sectionSimple(titreTexte, noteTexte, formations, variante) {
+  const section = document.createElement("section");
+  section.className = "carte-section carte-section-" + variante;
+
+  const titre = document.createElement("h3");
+  titre.className = "carte-section-titre";
+  titre.textContent = titreTexte;
+  section.appendChild(titre);
+
+  const note = document.createElement("p");
+  note.className = "carte-section-note";
+  note.textContent = noteTexte;
+  section.appendChild(note);
+
+  formations.forEach(function (f) { section.appendChild(createFormationBlock(f)); });
+  return section;
 }
 
 function createFormationBlock(formation) {
@@ -359,16 +484,10 @@ function createFormationBlock(formation) {
 
     // Les bacs pro HORS FAMILLE de métiers se choisissent directement en seconde :
     // l'élève ne passe PAS par une 2nde commune où il découvrirait plusieurs
-    // spécialités avant de trancher. C'est un engagement plus ferme, dès la 3e.
-    if (formation.horsFamille) {
-        const hf = document.createElement("p");
-        hf.className = "formation-horsfamille";
-        hf.textContent =
-            "⚠ Cette formation ne fait pas partie d'une famille de métiers : " +
-            "tu la choisis directement dès la seconde, et tu n'auras pas d'année " +
-            "commune pour découvrir d'autres spécialités avant de te décider.";
-        block.appendChild(hf);
-    }
+    // Le bandeau « hors famille » a été RETIRÉ d'ici : l'information est
+    // maintenant portée UNE FOIS par l'en-tête de la section « Bacs pro hors
+    // famille de métiers ». La répéter sur chacun des 11 blocs la rendait
+    // invisible à force d'être partout.
 
     if (formation.aVerifier) {
         const warning = document.createElement("p");
@@ -722,7 +841,7 @@ function secteurSelection(domainKey, formations) {
   return {
     type: 'formation',
     label: DOMAINS[domainKey].label,
-    formations: formations,
+    formations: avecSecteur(domainKey, formations),
     statKey: domainKey
   };
 }

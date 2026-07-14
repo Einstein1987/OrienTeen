@@ -100,12 +100,22 @@
     const blocs  = document.querySelectorAll("#cardDetailsContainer .formation-block");
     if (!blocs.length) return;
 
+    /* La carte est découpée en trois sections — famille de métiers, bacs pro
+     * hors famille, CAP — et cette information est capitale : elle dit à l'élève
+     * s'il entre en seconde COMMUNE ou directement en spécialité.
+     *
+     * Le PDF est ce qu'il imprime et montre à ses parents. S'il n'y retrouve
+     * pas les sections, il perd précisément ce qu'on a voulu lui apprendre.
+     * On parcourt donc les sections, et on retombe sur les blocs à plat si la
+     * structure venait à changer. */
+    const sections = document.querySelectorAll("#cardDetailsContainer .carte-section"); 
+
     let y = bandeau(doc, "Mon projet d'orientation");
 
     doc.setTextColor.apply(doc, MUTED);
     doc.setFontSize(8);
     doc.setFont(undefined, "bold");
-    doc.text("FAMILLE DE MÉTIERS / DOMAINE", M, y);
+    doc.text("SECTEUR", M, y);
     doc.setTextColor.apply(doc, BRASS);
     doc.setFontSize(13);
     doc.text(doc.splitTextToSize(domain.trim(), UTILE), M, y + 6);
@@ -114,7 +124,32 @@
     const PAD  = 5;                    // marge intérieure du cadre
     const BAS  = HAUT - M - 12;        // dernière ligne utilisable
 
-    blocs.forEach(function (bloc) {
+    // Un en-tête de section dans le PDF : son titre et sa phrase d'explication.
+    function enTeteSection(section) {
+      const titre = ((section.querySelector(".carte-section-titre") || {}).textContent || "").trim();
+      const note  = ((section.querySelector(".carte-section-note")  || {}).textContent || "").trim();
+      if (!titre) return;
+
+      const lignesNote = note ? doc.splitTextToSize(note, UTILE) : [];
+      const besoin = 8 + lignesNote.length * 4 + 4;
+      if (y + besoin > BAS) { doc.addPage(); y = M + 5; }
+
+      doc.setTextColor.apply(doc, INK);
+      doc.setFontSize(11);
+      doc.setFont(undefined, "bold");
+      doc.text(doc.splitTextToSize(titre, UTILE), M, y);
+      y += 6;
+
+      if (lignesNote.length) {
+        doc.setTextColor.apply(doc, MUTED);
+        doc.setFontSize(8);
+        doc.setFont(undefined, "normal");
+        doc.text(lignesNote, M, y);
+        y += lignesNote.length * 4 + 3;
+      }
+    }
+
+    function rendreBloc(bloc) {
       const titre  = ((bloc.querySelector(".formation-title") || {}).textContent || "").trim();
       const coeffs = Array.prototype.slice
         .call(bloc.querySelectorAll(".coeffs-table tbody td"))
@@ -235,7 +270,21 @@
       doc.setPage(pageFinale);
 
       y += PAD + 5;
-    });
+    }
+
+    if (sections.length) {
+      // Cas normal : trois sections, chacune avec son en-tête.
+      Array.prototype.forEach.call(sections, function (section) {
+        enTeteSection(section);
+        Array.prototype.forEach.call(
+          section.querySelectorAll(".formation-block"), rendreBloc);
+        y += 3;
+      });
+    } else {
+      // Filet de sécurité : si la structure en sections disparaissait, on
+      // imprime au moins les formations plutôt que de rendre une page vide.
+      Array.prototype.forEach.call(blocs, rendreBloc);
+    }
 
     noteFinale(doc, y,
       "Édité le " + date.trim() + ". N'hésite pas à en parler à ton professeur principal " +
