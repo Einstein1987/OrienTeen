@@ -230,6 +230,120 @@ console.log("\n── CONFIRMATION ÉCRITE (apostrophe courbe des claviers mobil
   }
 }
 
+/* ==========================================================================
+ * RECHERCHES GÉNÉRIQUES
+ *
+ * « bac » produisait 48 boutons dans le fil, « pro » 50, « cap » 33,
+ * « lycée » 29. Et « lycée Doisneau » — la formulation la plus naturelle pour
+ * un élève — n'en produisait AUCUN.
+ * ========================================================================== */
+console.log("\n── RECHERCHES GÉNÉRIQUES ──");
+{
+  // Combien de boutons de résultat le bot propose-t-il après une saisie ?
+  function chercher(saisie, etat) {
+    const a = monterApplication();
+    if (!a) return null;
+    const menu = boutons(a.doc);
+    // Ordre RÉEL du menu (startMenu) : 0 = formation, 1 = domaine, 2 = lycée, 3 = quiz.
+    // Un mapping erroné ici envoie la recherche dans le mauvais mode et fait
+    // passer les tests au vert sans jamais exécuter le code visé. C'est arrivé.
+    const idx = { formation: 0, domaine: 1, etab: 2 }[etat];
+    const cible = menu[idx];
+    if (!cible) { KO("Menu : bouton « " + etat + " » introuvable — l'ordre a changé ?"); return null; }
+    if (!/formation|domaine|famille|lyc/i.test(cible.textContent)) {
+      KO("Menu : le bouton " + idx + " ne correspond pas à « " + etat + " » (« " + cible.textContent + " »)");
+      return null;
+    }
+    if (!cliquer(a, cible)) return null;
+    if (!ecrire(a, saisie)) return null;
+    return {
+      app: a,
+      boutons: boutons(a.doc).length,
+      fiche: a.doc.querySelectorAll("#cardDetailsContainer .formation-block").length,
+      dernierMessage: Array.from(a.doc.querySelectorAll("#chatlog .msg.bot")).pop()?.textContent || ""
+    };
+  }
+
+  const PLAFOND = 8;
+
+  // Après une saisie libre, le bot DEMANDE confirmation (« c'est bien ça ? ») :
+  // c'est voulu — il a deviné, il vérifie. Le test doit donc répondre « Oui »
+  // avant d'attendre la fiche.
+  function confirmerOui(a) {
+    const oui = tousLesBoutons(a.doc).filter((b) => /^Oui$/.test(b.textContent) && !b.disabled);
+    if (oui.length) cliquer(a, oui[0]);
+    return a.doc.querySelectorAll("#cardDetailsContainer .formation-block").length;
+  }
+
+  // --- Les saisies purement structurelles ne doivent JAMAIS déverser la base.
+  [["bac", "formation"], ["pro", "formation"], ["cap", "formation"],
+   ["lycée", "etab"], ["formation", "domaine"]].forEach(function (cas) {
+    const r = chercher(cas[0], cas[1]);
+    if (!r) { KO("« " + cas[0] + " » : plantage"); return; }
+    if (r.boutons > 4) {
+      KO("« " + cas[0] + " » génère encore " + r.boutons + " boutons (plafond attendu : une poignée)");
+    } else if (r.fiche > 0) {
+      KO("« " + cas[0] + " » affiche une fiche alors que l'élève n'a rien précisé");
+    } else {
+      OK("« " + cas[0] + " » → " + r.boutons + " bouton(s), une question posée, pas de déversement");
+    }
+  });
+
+  // --- Le mot de structure ne doit plus EMPOISONNER une recherche légitime.
+  {
+    const r = chercher("lycée Doisneau", "etab");
+    if (!r) KO("« lycée Doisneau » : plantage");
+    else if (!/Doisneau/i.test(r.dernierMessage)) {
+      KO("RÉGRESSION : « lycée Doisneau » ne trouve toujours rien");
+    } else if (confirmerOui(r.app) > 0) {
+      OK("« lycée Doisneau » trouve bien le lycée, et la fiche s'affiche (bug corrigé)");
+    } else {
+      KO("« lycée Doisneau » est reconnu mais la fiche ne s'affiche pas");
+    }
+  }
+  {
+    // « cuisine » existe en Bac Pro ET en CAP : le bot propose donc les deux.
+    // C'est le bon comportement — il ne tranche pas à la place de l'élève.
+    const r = chercher("bac pro cuisine", "formation");
+    if (!r) KO("« bac pro cuisine » : plantage");
+    else {
+      const props = tousLesBoutons(r.app.doc)
+        .filter((b) => /cuisine/i.test(b.textContent) && !b.disabled);
+      if (!props.length) {
+        KO("« bac pro cuisine » ne trouve rien");
+      } else if (cliquer(r.app, props[0]) &&
+                 r.app.doc.querySelectorAll("#cardDetailsContainer .formation-block").length) {
+        OK("« bac pro cuisine » propose " + props.length + " formation(s) Cuisine, la fiche s'affiche");
+      } else {
+        KO("« bac pro cuisine » est reconnu mais la fiche ne s'affiche pas");
+      }
+    }
+  }
+
+  // --- Le plafond : au-delà, on remonte à la famille de métiers.
+  {
+    const r = chercher("maintenance", "formation");
+    if (!r) KO("« maintenance » : plantage");
+    else if (r.boutons === 0) KO("« maintenance » ne propose rien");
+    else if (r.boutons > PLAFOND) KO("« maintenance » dépasse le plafond : " + r.boutons + " boutons");
+    else OK("« maintenance » → " + r.boutons + " famille(s) de métiers, sous le plafond de " + PLAFOND);
+  }
+
+  // --- Aucune recherche, quelle qu'elle soit, ne doit dépasser le plafond.
+  {
+    let pire = 0, pireMot = "";
+    ["bac", "pro", "cap", "lycée", "métier", "maintenance", "technicien", "agent",
+     "a", "e", "professionnel", "seconde", "études", "option"].forEach(function (mot) {
+      ["domaine", "formation", "etab"].forEach(function (etat) {
+        const r = chercher(mot, etat);
+        if (r && r.boutons > pire) { pire = r.boutons; pireMot = mot + " (" + etat + ")"; }
+      });
+    });
+    if (pire > PLAFOND) KO("Le pire cas dépasse le plafond : « " + pireMot + " » → " + pire + " boutons");
+    else OK("Pire cas mesuré : " + pire + " boutons (« " + pireMot + " ») — plafond " + PLAFOND + " respecté");
+  }
+}
+
 /* ========================================================================== */
 console.log("\n" + "─".repeat(52));
 if (echecs) {
