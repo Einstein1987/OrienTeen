@@ -77,14 +77,16 @@
 
   // Une option demandable sur Affelnet pèse plus qu'un simple atout : elle structure
   // le vœu lui-même, alors qu'un atout se choisit après coup. 3 contre 1.
-  const POIDS_VOEU = 3, POIDS_ATOUT = 1;
-
-  function scoreTotal(lycId) {          // sert au classement ET au badge
-    return scoreLycee(lycId) * POIDS_VOEU + atoutsDe(lycId).length * POIDS_ATOUT;
-  }
-
-  function nbCriteres(lycId) {          // pour l'affichage du badge : nombre brut
-    return scoreLycee(lycId) + atoutsDe(lycId).length;
+  // Plus de score pondéré. Un « atout » (latin, EPS) et une « option-vœu »
+  // (design) ne sont pas comparables sur une même échelle : l'un se demande sur
+  // Affelnet, l'autre pas. Les additionner en 3+1 inventait une hiérarchie que
+  // rien ne justifiait, et le classement (pondéré) contredisait le badge (brut).
+  //
+  // Le classement repose désormais sur un critère FACTUEL et neutre : la
+  // distance. La sélection ne « note » pas les lycées, elle REMONTE en tête ceux
+  // qui proposent ce que l'élève cherche. Le badge dit juste : le propose, ou non.
+  function proposeQuelqueChose(lycId) {
+    return scoreLycee(lycId) > 0 || atoutsDe(lycId).length > 0;
   }
 
   /* ---------------------------------------------------------------------- */
@@ -131,9 +133,6 @@
   /* ---------------------------------------------------------------------- */
 
   function renderTable(root) {
-    const scores = {};
-    ORDRE_LYCEES.forEach(function (id) { scores[id] = nbCriteres(id); });
-    const best = Math.max.apply(null, ORDRE_LYCEES.map(function (id) { return scores[id]; }));
 
     let html = '<table class="gt-table"><thead><tr><th>Ce que je cherche</th>';
     ORDRE_LYCEES.forEach(function (id) {
@@ -191,9 +190,16 @@
 
     html += '</tbody><tfoot><tr><th class="gt-row-head">Ce lycée coche</th>';
     ORDRE_LYCEES.forEach(function (id) {
-      const s = scores[id];
-      const top = (selection.size > 0 && s === best && s > 0) ? " is-top" : "";
-      html += '<td><span class="gt-score-badge' + top + '">' + s + '</span></td>';
+      // Badge factuel : ce lycée propose-t-il ce que l'élève a coché ?
+      // Plus de chiffre, donc plus de contradiction possible avec le classement.
+      const actif = (selection.size > 0 || selPlace.size > 0);
+      if (!actif) {
+        html += '<td><span class="gt-score-badge gt-badge-neutre" title="Coche une option pour comparer">\u2013</span></td>';
+      } else if (proposeQuelqueChose(id)) {
+        html += '<td><span class="gt-score-badge is-top" title="Ce lycée propose ce que tu as coché">\u2713</span></td>';
+      } else {
+        html += '<td><span class="gt-score-badge gt-badge-non" title="Ce lycée ne propose pas ce que tu as coché">\u2013</span></td>';
+      }
     });
     html += '</tr></tfoot></table>';
 
@@ -214,16 +220,15 @@
   }
 
   function construireVoeux() {
-    // Un lycée est retenu s'il coche AU MOINS un critère — vœu OU atout.
+    // Les lycées qui proposent au moins un critère coché, TRIÉS PAR DISTANCE
+    // (plus de score : voir le commentaire de proposeQuelqueChose). La sélection
+    // ne classe pas, elle remonte simplement ces lycées en tête de liste.
     const retenus = ORDRE_LYCEES
       .map(function (id) {
-        return { id: id, lyc: LYCEES_2GT[id], score: scoreTotal(id), atouts: atoutsDe(id) };
+        return { id: id, lyc: LYCEES_2GT[id], atouts: atoutsDe(id) };
       })
-      .filter(function (o) { return o.score > 0; })
-      .sort(function (a, b) {
-        if (b.score !== a.score) return b.score - a.score;
-        return parTrajet(a.lyc, b.lyc);
-      });
+      .filter(function (o) { return proposeQuelqueChose(o.id); })
+      .sort(function (a, b) { return parTrajet(a.lyc, b.lyc); });
 
     const vus = {};                        // codes déjà placés, par lycée
     retenus.forEach(function (o) { vus[o.id] = new Set(); });
@@ -285,26 +290,31 @@
           if (b && !vus[o.id].has(b.code)) {
             vus[o.id].add(b.code);
             liste.push({ lyc: o.lyc, voeu: b, filet: true, atouts: o.atouts,
-                         seul: scoreLycee(o.id) === 0 });
+                         seul: scoreLycee(o.id) === 0 && atoutsDe(o.id).length === 0 });
           }
         });
     }
 
     // ---- Couverture du secteur ----
-    // Les 5 lycées sont des lycées de secteur : l'élève sera affecté dans l'un d'eux.
-    // S'il n'en classe que quelques-uns, la fin de son classement lui échappe.
-    // On complète donc avec les vœux simples des lycées absents, du plus proche au plus loin.
-    if (liste.length > 0) {
-      const dejaListes = new Set(liste.map(function (x) { return x.lyc.id; }));
-      ORDRE_LYCEES
-        .filter(function (id) { return !dejaListes.has(id); })
-        .map(function (id) { return LYCEES_2GT[id]; })
-        .sort(function (a, b) { return parTrajet(a, b); })
-        .forEach(function (l) {
-          const b = l.voeux.find(function (v) { return v.categorie === "base"; });
-          if (b) liste.push({ lyc: l, voeu: b, filet: false, complement: true, atouts: [] });
-        });
-    }
+    // Les 5 lycées sont des lycées de secteur : l'élève sera affecté dans l'un
+    // d'eux, qu'il ait coché une option ou non. On complète donc TOUJOURS la
+    // liste avec les vœux simples des lycées encore absents, du plus proche au
+    // plus loin.
+    //
+    // C'est cette section qui gère le cas le plus fréquent : l'élève ne veut
+    // AUCUNE option. Avant, la couverture était conditionnée à `liste.length > 0`
+    // et cet élève repartait avec zéro vœu à classer — alors qu'on lui disait
+    // « tu seras affecté dans l'un de ces 5 lycées ». Le filet de sécurité le
+    // plus important, celui des élèves sans projet d'option, était désactivé.
+    const dejaListes = new Set(liste.map(function (x) { return x.lyc.id; }));
+    ORDRE_LYCEES
+      .filter(function (id) { return !dejaListes.has(id); })
+      .map(function (id) { return LYCEES_2GT[id]; })
+      .sort(function (a, b) { return parTrajet(a, b); })
+      .forEach(function (l) {
+        const b = l.voeux.find(function (v) { return v.categorie === "base"; });
+        if (b) liste.push({ lyc: l, voeu: b, filet: false, complement: true, atouts: [] });
+      });
 
     return liste;
   }
@@ -313,18 +323,13 @@
     const date = new Date().toLocaleDateString("fr-FR");
     const aDesCriteres = selection.size > 0 || selPlace.size > 0;
 
-    let body;
+    // SANS AUCUNE OPTION (le cas le plus fréquent) : on n'affiche PLUS une carte
+    // vide. On suit le flux normal ci-dessous — qui produira les 5 lycées de
+    // secteur par distance — mais SANS la question « classer par lycée ou par
+    // option ? », qui n'a pas de sens quand il n'y a pas d'option.
+    // (Le drapeau `aDesCriteres` pilote l'affichage de cette question plus bas.)
 
-    if (!aDesCriteres) {
-      body = '<p class="gt-empty">Coche au moins une option ci-dessus pour voir apparaître ' +
-             'une proposition de vœux à recopier sur ta fiche Affelnet.</p>';
-      root.innerHTML =
-        '<div class="gt-card-head"><h3>Mes vœux 2GT</h3><span class="gt-date">' + date + '</span></div>' +
-        '<div class="gt-card-body">' + body + '</div>';
-      return;
-    }
-
-    // Le choix de classement, toujours affiché
+    // Le choix de classement (masqué s'il n'y a aucune option).
     const bLyc = strategie === "lycee"  ? " is-on" : "";
     const bOpt = strategie === "option" ? " is-on" : "";
     const choix =
@@ -344,12 +349,18 @@
           : '<p class="gt-strat-hint">Choisis l\'un des deux pour voir ta liste de vœux.</p>') +
       '</div>';
 
-    if (!strategie) {
+    // On demande de choisir une stratégie UNIQUEMENT s'il y a des options à
+    // classer. Sans option, la liste (les 5 lycées par distance) s'affiche
+    // directement — pas de choix à faire.
+    if (aDesCriteres && !strategie) {
       root.innerHTML =
         '<div class="gt-card-head"><h3>Mes vœux 2GT</h3><span class="gt-date">' + date + '</span></div>' +
         '<div class="gt-card-body">' + choix + '</div>';
       return;
     }
+
+    // Sans option, on n'affiche pas la question « lycée ou option ? ».
+    const blocChoix = aDesCriteres ? choix : "";
 
     const liste = construireVoeux();
 
@@ -371,17 +382,33 @@
 
       if (o.complement && !separateurPose) {
         separateurPose = true;
-        avant += '<li class="gt-sep-li"><div>' +
-          '<strong>Pour couvrir tous tes lycées de secteur</strong>' +
-          '<span>Tu seras forcément affecté dans l\'un de ces 5 lycées. Si tu n\'en classes ' +
-          'que quelques-uns et qu\'ils sont pleins, c\'est l\'administration qui choisira pour toi. ' +
-          'En ajoutant les vœux ci-dessous, du plus proche au plus lointain, <b>c\'est toi qui gardes ' +
-          'la main jusqu\'au bout</b>. Tu restes libre de les retirer ou de les réordonner.</span>' +
-          '</div></li>';
+        // Aucune option cochée du tout : la liste n'est QUE de la couverture.
+        // On ne parle donc pas de « compléter » — c'est le classement principal.
+        const aucuneOption = (selection.size === 0 && selPlace.size === 0);
+        avant += aucuneOption
+          ? '<li class="gt-sep-li"><div>' +
+            '<strong>Tes 5 lycées de secteur, du plus proche au plus loin</strong>' +
+            '<span>Tu ne cherches pas d\'option particulière, et c\'est très bien : la plupart ' +
+            'des élèves sont dans ce cas. Tu seras affecté dans l\'un de ces 5 lycées. En les ' +
+            'classant tous — ici du plus proche au plus lointain — <b>c\'est toi qui décides de ' +
+            'l\'ordre</b>, pas l\'administration. Tu peux les réordonner comme tu veux.</span>' +
+            '</div></li>'
+          : '<li class="gt-sep-li"><div>' +
+            '<strong>Pour couvrir tous tes lycées de secteur</strong>' +
+            '<span>Tu seras forcément affecté dans l\'un de ces 5 lycées. Si tu n\'en classes ' +
+            'que quelques-uns et qu\'ils sont pleins, c\'est l\'administration qui choisira pour toi. ' +
+            'En ajoutant les vœux ci-dessous, du plus proche au plus lointain, <b>c\'est toi qui gardes ' +
+            'la main jusqu\'au bout</b>. Tu restes libre de les retirer ou de les réordonner.</span>' +
+            '</div></li>';
       }
 
       let notes = "";
-      if (o.complement) {
+      if (o.complement && selection.size === 0 && selPlace.size === 0) {
+        // Cas « aucune option » : inutile de dire « tu n'as rien coché ICI »,
+        // l'élève n'a rien coché nulle part. Une note sobre suffit.
+        notes = '<span class="gt-v-note">Lycée de secteur : tu peux y être affecté. ' +
+                'À toi de le placer où tu veux dans ta liste.</span>';
+      } else if (o.complement) {
         notes = '<span class="gt-v-note">Vœu de couverture : tu n\'as coché aucune option ici, ' +
                 'mais ce lycée fait partie de ton secteur. Le classer, c\'est éviter qu\'on décide ' +
                 'à ta place si tes premiers vœux sont pleins.</span>';
@@ -459,7 +486,7 @@
         (liste.length > LIMITE_VOEUX
           ? ' <b>Il va falloir en retirer ' + (liste.length - LIMITE_VOEUX) + '.</b>' : '') +
       '</p>' +
-      choix +
+      blocChoix +
       '<ol class="gt-voeux">' + items + '</ol>' +
       (hors.length
         ? '<div class="gt-aside"><h4>À faire en dehors d\'Affelnet</h4><ul>' + hors.join("") + '</ul></div>'
