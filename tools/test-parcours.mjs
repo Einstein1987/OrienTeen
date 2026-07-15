@@ -382,6 +382,92 @@ console.log("\n── RECHERCHES GÉNÉRIQUES ──");
  * le focus retombe sur <body>. Un élève au clavier était renvoyé au début de
  * la page à CHAQUE critère coché.
  * ======================================================================== */
+/* ==========================================================================
+ * CLASSEMENT 2GT
+ *
+ * Trois cas qui ne marchaient pas :
+ *  - Sans aucune option (le cas le plus fréquent) : zéro vœu proposé, alors que
+ *    l'app promettait « tu seras affecté dans l'un de ces 5 lycées ».
+ *  - Badge (brut) et classement (pondéré 3/1) se contredisaient.
+ *  - Un atout seul (japonais) ne produisait rien d'exploitable.
+ * ======================================================================== */
+console.log("\n── CLASSEMENT 2GT ──");
+{
+  const voeuxDe = (doc) => Array.from(doc.querySelectorAll("#vue-2gt ol.gt-voeux > li"))
+    .filter((li) => !li.classList.contains("gt-sep-li") && !li.classList.contains("gt-limite-li"));
+  const cocher = (a, id) => {
+    const c = a.doc.querySelector('#vue-2gt [data-critere="' + id + '"],#vue-2gt [data-place="' + id + '"]');
+    if (c) c.dispatchEvent(new a.window.Event("click", { bubbles: true }));
+    return !!c;
+  };
+  const strat = (a, s) => {
+    const b = a.doc.querySelector('#vue-2gt [data-strat="' + s + '"]');
+    if (b) b.dispatchEvent(new a.window.Event("click", { bubbles: true }));
+  };
+
+  // 1. Sans aucune option → les 5 lycées de secteur, par distance.
+  {
+    const a = monterApplication2GT();
+    if (a) {
+      const v = voeuxDe(a.doc);
+      if (v.length === 5) OK("Sans option : les 5 lycées de secteur sont proposés (le cas le plus fréquent)");
+      else KO("Sans option : " + v.length + " vœu(x) proposé(s), on en attend 5");
+
+      const txt = (a.doc.querySelector("#vue-2gt") || {}).textContent || "";
+      if (/plus proche/i.test(txt)) OK("Sans option : le classement de départ est expliqué (par distance)");
+      else KO("Sans option : aucune explication du classement");
+    }
+  }
+
+  // 2. Une option (Design, proposée par un seul lycée) → ce lycée en tête.
+  {
+    const a = monterApplication2GT();
+    if (a && cocher(a, "design")) {
+      strat(a, "lycee");
+      const v = voeuxDe(a.doc);
+      const premier = (v[0] || {}).textContent || "";
+      if (/design/i.test(premier)) OK("Option Design : le lycée qui la propose passe en tête");
+      else KO("Option Design : le 1er vœu n'est pas le lycée avec Design (« " + premier.slice(0, 40) + " »)");
+      // La couverture doit compléter jusqu'aux 5 lycées.
+      const lycees = new Set(v.map((li) => (li.querySelector(".gt-v-lyc") || {}).textContent));
+      if (lycees.size === 5) OK("Option Design : les 5 lycées de secteur restent couverts");
+      else KO("Option Design : seuls " + lycees.size + " lycées couverts, on en attend 5");
+    } else if (a) {
+      KO("Le critère « design » est introuvable");
+    }
+  }
+
+  // 3. Badge factuel : plus de chiffre, donc aucune contradiction possible.
+  {
+    const a = monterApplication2GT();
+    if (a) {
+      cocher(a, "design");
+      const badges = Array.from(a.doc.querySelectorAll("#vue-2gt .gt-score-badge"));
+      const chiffres = badges.filter((b) => /^\d+$/.test(b.textContent.trim()));
+      if (chiffres.length === 0) OK("Le badge n'affiche plus de chiffre pondéré (plus de contradiction avec le classement)");
+      else KO(chiffres.length + " badge(s) affichent encore un chiffre");
+      const coches = badges.filter((b) => b.textContent.trim() === "\u2713");
+      if (coches.length >= 1) OK("Le badge ✓ marque les lycées qui proposent l'option cochée");
+      else KO("Aucun badge ✓ alors qu'une option est cochée");
+    }
+  }
+
+  // 4. Un atout seul (japonais, sur place) : le lycée remonte, l'atout est cité.
+  {
+    const a = monterApplication2GT();
+    if (a && cocher(a, "sp_japonais")) {
+      strat(a, "lycee");
+      const txt = (a.doc.querySelector("#vue-2gt") || {}).textContent || "";
+      if (/japonais/i.test(txt)) OK("Atout seul (japonais) : l'atout est bien mentionné dans la carte");
+      else KO("Atout seul (japonais) : l'atout n'apparaît nulle part");
+      if (voeuxDe(a.doc).length === 5) OK("Atout seul : les 5 lycées restent proposés");
+      else KO("Atout seul : la couverture des 5 lycées est incomplète");
+    } else if (a) {
+      KO("Le critère « sp_japonais » est introuvable");
+    }
+  }
+}
+
 console.log("\n── FOCUS CLAVIER (2GT) ──");
 {
   const a = monterApplication2GT();
