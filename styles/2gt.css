@@ -107,11 +107,17 @@ table.gt-table tr.gt-sep td, table.gt-table tr.gt-sep th {
 table.gt-table tfoot td, table.gt-table tfoot th {
   background: var(--soft, #F8FAFC); font-weight: 700; color: var(--ink, #0F172A); border-bottom: none;
 }
+/* Badge factuel : ✓ = le lycée propose ce que l'élève a coché ; – sinon.
+   Plus de chiffre pondéré (qui contredisait le classement). La forme (✓/–) et
+   le texte au survol portent l'information : la couleur ne fait que renforcer. */
 .gt-score-badge {
   display: inline-block; min-width: 26px; padding: 2px 8px; border-radius: 999px;
   background: var(--line, #E2E8F0); color: var(--muted-strong, #475569); font-weight: 700;
+  text-align: center;
 }
-.gt-score-badge.is-top { background: var(--brass, #4F46E5); color: #fff; }
+.gt-score-badge.is-top     { background: var(--brass, #4F46E5); color: #fff; }   /* ✓ 6,29:1 */
+.gt-score-badge.gt-badge-non    { background: transparent; color: var(--muted, #5C6B80); } /* – 5,43:1 */
+.gt-score-badge.gt-badge-neutre { background: transparent; color: var(--muted, #5C6B80); }
 
 /* ---------- Carte de sortie ---------- */
 .gt-card { background: var(--paper2, #FFFFFF); border: 1px solid var(--line, #E2E8F0);
