@@ -466,6 +466,31 @@ console.log("\n── CLASSEMENT 2GT ──");
       KO("Le critère « sp_japonais » est introuvable");
     }
   }
+  // 5. Numérotation : les bandeaux d'information (séparateurs, limite) ne
+  //    doivent PAS être comptés comme des vœux. Le compteur CSS ne s'incrémente
+  //    que sur le ::before des vrais vœux ; les bandeaux ont content:none.
+  {
+    const a = monterApplication2GT();
+    if (a) {
+      // On lit la feuille de style pour vérifier la règle, puisque jsdom ne
+      // calcule pas les compteurs CSS. La garantie tient à deux conditions.
+      const css = lire("styles/2gt.css");
+      const increArBonEndroit = /ol\.gt-voeux > li::before\s*\{[^}]*counter-increment:\s*v/.test(css);
+      const bandeauxSansContenu = /li\.gt-sep-li::before\s*\{\s*content:\s*none/.test(css) &&
+                                  /li\.gt-limite-li::before\s*\{\s*content:\s*none/.test(css);
+      // Et surtout : le <li> lui-même ne doit PAS incrémenter (sinon les bandeaux
+      // compteraient malgré tout). C'est le bug qui faisait démarrer la liste à 2.
+      const liNincremente = !/ol\.gt-voeux > li\s*\{[^}]*counter-increment/.test(css);
+
+      if (increArBonEndroit && liNincremente && bandeauxSansContenu) {
+        OK("Numérotation : seuls les vrais vœux sont comptés (les bandeaux sont ignorés)");
+      } else {
+        KO("Numérotation : un bandeau d'information risque d'être compté comme un vœu " +
+           "(incrément sur ::before=" + increArBonEndroit + ", li n'incrémente pas=" +
+           liNincremente + ", bandeaux sans ::before=" + bandeauxSansContenu + ")");
+      }
+    }
+  }
 }
 
 console.log("\n── FOCUS CLAVIER (2GT) ──");
