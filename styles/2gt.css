@@ -334,3 +334,34 @@ ol.gt-voeux > li.is-hors-limite::before { background: #FCA5A5 !important;
 
   .gt-source { font-size: .68rem !important; }
 }
+
+/* =============================================================================
+ * RÉORDONNANCEMENT DES VŒUX — cas « sans option » uniquement
+ *
+ * Glisser-déposer (souris) ET flèches ↑↓ (clavier). Les deux, jamais l'un sans
+ * l'autre : un élève au clavier ou au lecteur d'écran doit pouvoir réordonner
+ * comme les autres. La couleur n'est pas le seul signal — les flèches ont un
+ * aria-label explicite (« Monter Lycée … »).
+ *
+ * Activé seulement sans option : là, les 5 vœux sont équivalents, aucun filet
+ * de sécurité à protéger. Dès qu'une option est cochée, l'app reprend la main.
+ * ========================================================================== */
+li.gt-reordonnable { cursor: grab; }
+li.gt-reordonnable:active { cursor: grabbing; }
+li.gt-drag { opacity: 0.5; outline: 2px dashed var(--brass, #4F46E5); }
+
+.gt-reorder {
+  float: right; display: flex; flex-direction: column; gap: 2px; margin-left: 8px;
+}
+.gt-move {
+  border: 1px solid var(--line, #E2E8F0); background: #fff;
+  color: var(--brass, #4F46E5);              /* 6,29:1 sur blanc */
+  width: 26px; height: 20px; border-radius: 5px; cursor: pointer;
+  font-size: 11px; line-height: 1; padding: 0;
+}
+.gt-move:hover  { background: var(--brass-soft, #EEF2FF); }
+.gt-move:focus-visible { outline: 3px solid var(--brass-dark, #4338CA); outline-offset: 2px; }
+
+@media print {
+  .gt-reorder { display: none !important; }   /* pas de flèches sur le PDF imprimé */
+}

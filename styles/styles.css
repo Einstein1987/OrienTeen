@@ -681,6 +681,15 @@ h1 {
 .carte-section-hors-famille .carte-section-note  { color: #78350F; }        /* 8,75:1 */
 
 /* CAP — hors du système des familles */
+/* Seconde commune propre (ex. Métiers du cuir) : même logique pédagogique que
+   les familles — une année de découverte — donc même code couleur indigo. */
+.carte-section-seconde-commune {
+     background: var(--brass-soft);
+     border-color: var(--brass);
+}
+.carte-section-seconde-commune .carte-section-titre { color: var(--brass-dark); }  /* 7,07:1 */
+.carte-section-seconde-commune .carte-section-note  { color: var(--muted-strong); } /* 6,78:1 */
+
 .carte-section-cap {
      background: var(--success-soft);
      border-color: var(--teal);
@@ -695,6 +704,7 @@ h1 {
           border: 1px solid var(--line) !important;
      }
      .carte-section-famille     { background: var(--brass-soft) !important; }
+     .carte-section-seconde-commune { background: var(--brass-soft) !important; }
      .carte-section-hors-famille { background: #FFFBEB !important; }
      .carte-section-cap         { background: var(--success-soft) !important; }
 }
