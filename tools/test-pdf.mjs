@@ -209,6 +209,16 @@ console.log("\n\u2500\u2500 PDF DE LA LISTE DE V\u0152UX (2GT) \u2500\u2500");
         }
         if (buf.length < 3000) KO("PDF suspicieusement petit : " + buf.length + " octets");
         else OK("Le PDF a une taille plausible (contenu non vide)");
+
+        // Les étiquettes filet/couverture doivent survivre à l'export. Elles
+        // sont désormais sur leur propre ligne (avant, à droite du libellé,
+        // elles le chevauchaient dès qu'il était long — bug relevé par l'audit).
+        const brut2 = buf.toString("latin1");
+        if (/filet de s.curit.|couverture secteur/.test(brut2)) {
+          OK("Le PDF 2GT contient les étiquettes de vœux (filet / couverture)");
+        } else {
+          KO("Le PDF 2GT ne contient aucune étiquette de vœu");
+        }
       }
     }
   }

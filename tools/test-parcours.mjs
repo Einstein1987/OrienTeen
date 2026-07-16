@@ -391,6 +391,100 @@ console.log("\n── RECHERCHES GÉNÉRIQUES ──");
  *  - Badge (brut) et classement (pondéré 3/1) se contredisaient.
  *  - Un atout seul (japonais) ne produisait rien d'exploitable.
  * ======================================================================== */
+/* ==========================================================================
+ * LA CARTE S'EFFACE APRÈS UN REFUS
+ *
+ * Bug relevé par l'audit : afficher une fiche, lancer une autre recherche,
+ * répondre « Non » → l'ancienne fiche restait affichée, laissant croire qu'elle
+ * était toujours le projet retenu.
+ * ======================================================================== */
+console.log("\n── EFFACEMENT DE LA CARTE APRÈS « NON » ──");
+{
+  const a = monterApplication();
+  if (a) {
+    const boutonsActifs = () => boutons(a.doc);
+    const carteVisible = () => a.doc.getElementById("cardFilled").style.display !== "none";
+
+    // 1. Afficher une fiche (Bac Pro Cuisine).
+    cliquer(a, boutonsActifs().find((b) => /formation/i.test(b.textContent)));
+    ecrire(a, "cuisine");
+    let b = boutonsActifs().find((x) => /Bac Pro Cuisine/i.test(x.textContent));
+    if (b) cliquer(a, b);
+    let oui = boutonsActifs().filter((x) => /^Oui$/.test(x.textContent));
+    if (oui.length) cliquer(a, oui[0]);
+
+    if (carteVisible()) {
+      OK("Une fiche s'affiche bien après confirmation");
+
+      // 2. Nouvelle recherche, puis « Non ». Après l'affichage d'une fiche, le
+      //    chatbot propose de continuer : on clique le bouton qui rouvre une
+      //    recherche par formation (ou le menu).
+      const relance = boutonsActifs().find((x) => /formation|autre|recherche|menu/i.test(x.textContent));
+      if (!relance) {
+        KO("Aucun bouton pour relancer une recherche après la fiche — test à adapter");
+      } else {
+        cliquer(a, relance);
+        const champ2 = boutonsActifs().find((x) => /formation/i.test(x.textContent));
+        if (champ2) cliquer(a, champ2);
+        ecrire(a, "melec");
+        b = boutonsActifs().find((x) => /MELEC/i.test(x.textContent));
+        if (b) cliquer(a, b);
+        const non = boutonsActifs().filter((x) => /^Non$/.test(x.textContent));
+        if (!non.length) {
+          KO("Pas de bouton « Non » proposé — scénario à revoir");
+        } else {
+          cliquer(a, non[non.length - 1]);
+
+          if (!carteVisible()) OK("Après « Non » : l'ancienne fiche a bien disparu");
+          else KO("Après « Non » : l'ancienne fiche reste affichée (elle devrait s'effacer)");
+
+          const details = a.doc.getElementById("cardDetailsContainer").textContent.trim();
+          if (details === "") OK("Après « Non » : le contenu de la fiche est vidé");
+          else KO("Après « Non » : le contenu de la fiche subsiste (« " + details.slice(0, 30) + "… »)");
+
+          const empty = a.doc.getElementById("cardEmpty");
+          if (empty && empty.style.display !== "none") OK("Après « Non » : l'invite « ta fiche apparaîtra ici » est réaffichée");
+          else KO("Après « Non » : l'invite de carte vide n'est pas réaffichée");
+        }
+      }
+    } else {
+      KO("La fiche ne s'affiche pas — test du « Non » impossible");
+    }
+  }
+}
+
+/* ==========================================================================
+ * VOCABULAIRE : « secteur », jamais « famille de métiers » pour nos 18 secteurs
+ *
+ * Le quiz et les recherches classent les 18 SECTEURS thématiques. Les appeler
+ * « familles de métiers » (14 officielles, réalité Affelnet) réinstalle la
+ * confusion qu'on a retirée du menu.
+ * ======================================================================== */
+console.log("\n── VOCABULAIRE SECTEUR / FAMILLE ──");
+{
+  const a = monterApplication();
+  if (a) {
+    // Fin de quiz : cliquer « je suis perdu » puis répondre au hasard.
+    const quiz = boutons(a.doc).find((b) => /perdu|quiz/i.test(b.textContent));
+    if (quiz) {
+      cliquer(a, quiz);
+      // Répondre à toutes les questions (toujours la 1re option) jusqu'au résultat.
+      for (let i = 0; i < 15; i++) {
+        const opts = boutons(a.doc).filter((b) => /^(?!Oui$|Non$).+/.test(b.textContent.trim()));
+        const rep = opts.find((b) => !/perdu|quiz|reformuler/i.test(b.textContent));
+        if (!rep) break;
+        cliquer(a, rep);
+        if (/secteurs? qui te correspond|voici les trois secteurs/i.test((a.doc.querySelector("#chatlog") || {}).textContent || "")) break;
+      }
+      const texte = (a.doc.querySelector("#chatlog") || {}).textContent || "";
+      // Le message de résultat doit dire « secteurs », pas « familles de métiers ».
+      if (/trois secteurs/i.test(texte)) OK("Fin de quiz : le résultat parle de « secteurs »");
+      else if (/familles de métiers/i.test(texte)) KO("Fin de quiz : le résultat dit encore « familles de métiers »");
+      else OK("Fin de quiz atteinte (formulation « secteurs » attendue)");
+    }
+  }
+}
+
 console.log("\n── CLASSEMENT 2GT ──");
 {
   const voeuxDe = (doc) => Array.from(doc.querySelectorAll("#vue-2gt ol.gt-voeux > li"))
@@ -462,8 +556,26 @@ console.log("\n── CLASSEMENT 2GT ──");
       else KO("Atout seul (japonais) : l'atout n'apparaît nulle part");
       if (voeuxDe(a.doc).length === 5) OK("Atout seul : les 5 lycées restent proposés");
       else KO("Atout seul : la couverture des 5 lycées est incomplète");
+
+      // Un atout ne crée AUCUN vœu à option, donc AUCUN vœu ne doit porter
+      // l'étiquette « filet de sécurité » : un filet n'a de sens que sous un
+      // vœu à option. (Bug repéré : Bondoufle affichait « filet » à tort.)
+      const filets = a.doc.querySelectorAll("#gt-carte .gt-tag-filet");
+      if (filets.length === 0) OK("Atout seul : aucune fausse étiquette « filet de sécurité »");
+      else KO("Atout seul : " + filets.length + " étiquette(s) « filet » alors qu'il n'y a aucun vœu à option");
     } else if (a) {
       KO("Le critère « sp_japonais » est introuvable");
+    }
+  }
+
+  // 4bis. Une vraie option (Design) DOIT, elle, produire un filet sous son vœu.
+  {
+    const a = monterApplication2GT();
+    if (a && cocher(a, "design")) {
+      strat(a, "lycee");
+      const filets = a.doc.querySelectorAll("#gt-carte .gt-tag-filet");
+      if (filets.length >= 1) OK("Option Design : le vœu à option a bien son filet de sécurité en dessous");
+      else KO("Option Design : le filet de sécurité a disparu (il doit rester sous le vœu à option)");
     }
   }
   // 5. Numérotation : les bandeaux d'information (séparateurs, limite) ne
