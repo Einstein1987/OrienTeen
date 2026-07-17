@@ -40,6 +40,23 @@
     if (typeof pingStats === "function") pingStats(type, valeur);
   }
 
+  // Signale UN usage abouti du 2GT — une seule fois par chargement de page.
+  //
+  // Avant, la statistique ne partait qu'au clic sur « classer par lycée / par
+  // option ». Or ce bouton n'apparaît QUE si l'élève a coché une vraie option.
+  // Résultat : les élèves sans option (la majorité) et ceux qui cochent un
+  // simple atout n'étaient JAMAIS comptés. Les statistiques sous-estimaient
+  // massivement l'usage réel du comparateur.
+  //
+  // On compte désormais dès qu'il y a un vrai usage, quelle qu'en soit la
+  // porte d'entrée : cocher une option, cocher un atout, ou réordonner ses
+  // vœux sans option. Ouvrir l'onglet ou en changer ne compte pas.
+  function signalerUsage2GT(detail) {
+    if (statEnvoyee) return;
+    statEnvoyee = true;
+    ping("2gt_voeux", detail);
+  }
+
   function trajetTexte(lyc) {
     const t = lyc.trajet || {};
     if (t.minutes == null) return "trajet à renseigner";
@@ -233,6 +250,37 @@
   }
 
   function construireVoeux() {
+    // CAS SANS AUCUNE VRAIE OPTION (rien coché, ou seulement des atouts sur
+    // place comme le japonais). Les 5 lycées forment alors UNE SEULE liste de
+    // vœux simples, entièrement réordonnable. L'ordre par défaut met en tête les
+    // lycées qui proposent un atout coché (pour qu'ils remontent), puis les
+    // autres par distance — mais l'élève peut tout déplacer, y compris ces
+    // lycées-là. On ne sépare donc PAS « retenus » et « couverture » ici, sinon
+    // les lycées-à-atout seraient bloqués en tête et impossibles à déplacer.
+    if (selection.size === 0) {
+      let ids = ORDRE_LYCEES.slice();
+      if (ordrePerso) {
+        // L'élève a réordonné : on respecte son ordre.
+        ids.sort(function (a, b) {
+          const ia = ordrePerso.indexOf(a), ib = ordrePerso.indexOf(b);
+          return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+        });
+      } else {
+        // Ordre par défaut : lycées à atout d'abord, puis par distance.
+        ids.sort(function (a, b) {
+          const pa = proposeQuelqueChose(a) ? 0 : 1;
+          const pb = proposeQuelqueChose(b) ? 0 : 1;
+          if (pa !== pb) return pa - pb;
+          return parTrajet(LYCEES_2GT[a], LYCEES_2GT[b]);
+        });
+      }
+      return ids.map(function (id) {
+        const l = LYCEES_2GT[id];
+        const b = l.voeux.find(function (v) { return v.categorie === "base"; });
+        return { lyc: l, voeu: b, filet: false, complement: true, atouts: atoutsDe(id) };
+      });
+    }
+
     // Les lycées qui proposent au moins un critère coché, TRIÉS PAR DISTANCE
     // (plus de score : voir le commentaire de proposeQuelqueChose). La sélection
     // ne classe pas, elle remonte simplement ces lycées en tête de liste.
@@ -333,7 +381,7 @@
 
     // Sans aucune option, si l'élève a réordonné les lycées (glisser-déposer ou
     // flèches), on respecte SON ordre. Sinon, ordre par distance.
-    const sansOption = selection.size === 0 && selPlace.size === 0;
+    const sansOption = selection.size === 0;   // atout seul compris
     if (sansOption && ordrePerso) {
       reste.sort(function (a, b) {
         const ia = ordrePerso.indexOf(a), ib = ordrePerso.indexOf(b);
@@ -348,7 +396,11 @@
       .map(function (id) { return LYCEES_2GT[id]; })
       .forEach(function (l) {
         const b = l.voeux.find(function (v) { return v.categorie === "base"; });
-        if (b) liste.push({ lyc: l, voeu: b, filet: false, complement: true, atouts: [] });
+        // On rattache les atouts « sur place » que CE lycée propose : ainsi un
+        // atout coché seul (japonais) apparaît bien sur le lycée concerné, à
+        // l'écran ET dans le PDF, même si ce lycée n'est là qu'en couverture.
+        if (b) liste.push({ lyc: l, voeu: b, filet: false, complement: true,
+                            atouts: atoutsDe(l.id) });
       });
 
     return liste;
@@ -356,15 +408,25 @@
 
   function renderCarte(root) {
     const date = new Date().toLocaleDateString("fr-FR");
-    const aDesCriteres = selection.size > 0 || selPlace.size > 0;
 
-    // SANS AUCUNE OPTION (le cas le plus fréquent) : on n'affiche PLUS une carte
-    // vide. On suit le flux normal ci-dessous — qui produira les 5 lycées de
-    // secteur par distance — mais SANS la question « classer par lycée ou par
-    // option ? », qui n'a pas de sens quand il n'y a pas d'option.
-    // (Le drapeau `aDesCriteres` pilote l'affichage de cette question plus bas.)
+    // DISTINCTION CAPITALE (relevée par l'audit) :
+    //
+    //   selection  = de vraies OPTIONS Affelnet (design, biotech…). Chacune est
+    //                un vœu à formuler. Elles déclenchent le mode « stratégie »
+    //                (classer par lycée / par option) et les filets de sécurité.
+    //
+    //   selPlace   = des ATOUTS proposés « sur place » (japonais, latin, EPS…).
+    //                Ils ne créent AUCUN vœu Affelnet : on les choisit à
+    //                l'inscription, une fois dans le lycée. Cocher un atout ne
+    //                doit donc RIEN changer au parcours des 5 lycées — juste
+    //                signaler « ce lycée propose aussi le japonais ».
+    //
+    // Le mode « stratégie » ne dépend donc QUE des vraies options. Avant, il
+    // suffisait de cocher un atout pour basculer à tort dans ce mode : boutons
+    // de classement sans objet, liste masquée, glisser-déposer désactivé.
+    const aDesOptions = selection.size > 0;
 
-    // Le choix de classement (masqué s'il n'y a aucune option).
+    // Le choix de classement (masqué s'il n'y a aucune option Affelnet).
     const bLyc = strategie === "lycee"  ? " is-on" : "";
     const bOpt = strategie === "option" ? " is-on" : "";
     const choix =
@@ -387,7 +449,7 @@
     // On demande de choisir une stratégie UNIQUEMENT s'il y a des options à
     // classer. Sans option, la liste (les 5 lycées par distance) s'affiche
     // directement — pas de choix à faire.
-    if (aDesCriteres && !strategie) {
+    if (aDesOptions && !strategie) {
       root.innerHTML =
         '<div class="gt-card-head"><h3>Mes vœux 2GT</h3><span class="gt-date">' + date + '</span></div>' +
         '<div class="gt-card-body">' + choix + '</div>';
@@ -395,7 +457,7 @@
     }
 
     // Sans option, on n'affiche pas la question « lycée ou option ? ».
-    const blocChoix = aDesCriteres ? choix : "";
+    const blocChoix = aDesOptions ? choix : "";
 
     const liste = construireVoeux();
 
@@ -419,7 +481,7 @@
         separateurPose = true;
         // Aucune option cochée du tout : la liste n'est QUE de la couverture.
         // On ne parle donc pas de « compléter » — c'est le classement principal.
-        const aucuneOption = (selection.size === 0 && selPlace.size === 0);
+        const aucuneOption = (selection.size === 0);   // atout seul compris : pas de vraie option
         avant += aucuneOption
           ? '<li class="gt-sep-li"><div>' +
             '<strong>Tes 5 lycées de secteur, du plus proche au plus loin</strong>' +
@@ -438,7 +500,7 @@
       }
 
       let notes = "";
-      if (o.complement && selection.size === 0 && selPlace.size === 0) {
+      if (o.complement && selection.size === 0) {
         // Cas « aucune option » : inutile de dire « tu n'as rien coché ICI »,
         // l'élève n'a rien coché nulle part. Une note sobre suffit.
         notes = '<span class="gt-v-note">Lycée de secteur : tu peux y être affecté. ' +
@@ -463,7 +525,7 @@
         notes = '<span class="gt-v-note">' + v.note + '</span>';
       }
 
-      if (o.filet && o.atouts && o.atouts.length) {
+      if (o.atouts && o.atouts.length) {
         notes += '<span class="gt-v-atouts">★ Ce lycée propose aussi ce que tu as coché : <b>' +
                  o.atouts.map(function (a) { return a.label; }).join(", ") + '</b>' +
                  ' — à choisir à l\'inscription, ce n\'est pas un vœu.</span>';
@@ -479,11 +541,11 @@
                  : (o.filet ? (o.seul ? "is-simple" : "is-filet") : "");
       if (rang > LIMITE_VOEUX) classe += " is-hors-limite";
 
-      // Réordonnancement : UNIQUEMENT sans option (vœux tous équivalents, aucun
-      // filet à protéger). On ajoute le glisser-déposer ET des flèches ↑↓ pour
-      // le clavier — sans quoi un élève qui n'utilise pas la souris ne pourrait
-      // pas réordonner, ce qui serait une régression d'accessibilité.
-      const reordonnable = (selection.size === 0 && selPlace.size === 0);
+      // Réordonnancement : dès qu'il n'y a AUCUNE vraie option Affelnet (que des
+      // atouts sur place, ou rien du tout). Dans ces cas la liste n'est faite que
+      // de 5 vœux simples équivalents — aucun filet de sécurité à protéger, donc
+      // l'élève peut les réordonner librement (souris + flèches clavier).
+      const reordonnable = (selection.size === 0);
       const attrsDrag = reordonnable
         ? ' draggable="true" data-lyc="' + o.lyc.id + '"' : "";
       if (reordonnable) classe += " gt-reordonnable";
@@ -639,8 +701,9 @@
     const c = CRITERES_SUR_PLACE.find(function (x) { return x.id === id; });
     if (!c) return;
     if (selPlace.has(id)) { selPlace.delete(id); }
-    else { selPlace.add(id); }
-    ordrePerso = null;   // dès qu'une option entre en jeu, l'app reprend l'ordre
+    else { selPlace.add(id); signalerUsage2GT("Atout sur place coché"); }
+    // Un atout ne bascule PAS en mode option : on ne réinitialise donc pas
+    // l'ordre perso (l'élève garde son classement des 5 lycées).
     refresh();
   }
 
@@ -651,15 +714,22 @@
       selection.delete(id);
     } else {
       selection.add(id);
+      signalerUsage2GT("Option Affelnet cochée");
     }
-    ordrePerso = null;   // idem : l'ordre perso ne vaut que pour le cas sans option
+    ordrePerso = null;   // une vraie option : l'app reprend la main sur l'ordre
     refresh();
   }
 
   /* Ordre courant des 5 lycées dans le cas sans option (perso ou par distance). */
   function ordreCourant() {
     if (ordrePerso) return ordrePerso.slice();
+    // Même ordre par défaut que construireVoeux : lycées à atout d'abord, puis
+    // par distance. Sinon, le premier déplacement partirait d'un ordre erroné
+    // (par distance pure) et ferait « sauter » la liste sous les yeux de l'élève.
     return ORDRE_LYCEES.slice().sort(function (a, b) {
+      const pa = proposeQuelqueChose(a) ? 0 : 1;
+      const pb = proposeQuelqueChose(b) ? 0 : 1;
+      if (pa !== pb) return pa - pb;
       return parTrajet(LYCEES_2GT[a], LYCEES_2GT[b]);
     });
   }
@@ -667,7 +737,7 @@
   /* Déplace un lycée d'un cran (flèches) ou à une position (glisser-déposer).
    * N'a d'effet que sans option — le seul cas où le réordonnancement est permis. */
   function deplacerLycee(idLyc, versId) {
-    if (selection.size > 0 || selPlace.size > 0) return;   // sécurité
+    if (selection.size > 0) return;   // sécurité : pas de réordre si vraie option
     const ordre = ordreCourant();
     const de = ordre.indexOf(idLyc);
     if (de === -1) return;
@@ -681,6 +751,9 @@
     }
     ordre.splice(a, 0, idLyc);
     ordrePerso = ordre;
+    // Réordonner ses vœux est un usage abouti du 2GT (cas sans option, souvent
+    // le plus fréquent). Sans ça, ces élèves n'étaient jamais comptés.
+    signalerUsage2GT("Vœux réordonnés (sans option)");
     refresh();
   }
 
@@ -719,12 +792,10 @@
       const strat = e.target.closest("[data-strat]");
       if (strat) {
         const nouvelle = strat.dataset.strat;
-        // La statistique part au PREMIER choix de classement — c'est la seule vraie
-        // décision de l'élève. Changer d'avis ensuite n'envoie rien de plus.
-        if (!statEnvoyee) {
-          statEnvoyee = true;
-          ping("2gt_voeux", nouvelle === "lycee" ? "Classement par lycée" : "Classement par option");
-        }
+        // L'usage a déjà été compté au cochage de l'option ; cet appel ne fait
+        // donc rien de plus (garde statEnvoyee), mais couvre le cas — théorique —
+        // où l'on arriverait ici sans être passé par un cochage.
+        signalerUsage2GT(nouvelle === "lycee" ? "Classement par lycée" : "Classement par option");
         strategie = nouvelle;
         refresh();
         return;
@@ -781,7 +852,10 @@
         trajet:    trajetTexte(o.lyc) + (trajetLigne(o.lyc) ? " (" + trajetLigne(o.lyc) + ")" : ""),
         procedure: o.voeu.procedure || null,
         filet:      !!(o.filet && !o.seul),
-        complement: !!o.complement
+        complement: !!o.complement,
+        // Les atouts « sur place » proposés par ce lycée (japonais, latin…),
+        // pour que le PDF puisse les mentionner. Vide si aucun n'est coché.
+        atouts:    (o.atouts || []).map(function (a) { return a.label; })
       };
     });
   }
