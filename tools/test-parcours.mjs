@@ -644,6 +644,39 @@ console.log("\n── CLASSEMENT 2GT ──");
       if (compte === 0) OK("Stat 2GT : ouvrir l'onglet sans agir ne compte pas (pas de faux positif)");
       else KO("Stat 2GT : une simple ouverture d'onglet est comptée à tort");
     }
+
+    // L'ANGLE MORT : l'élève sans option, sans atout, qui accepte l'ordre par
+    // défaut et TÉLÉCHARGE son PDF. Il n'a rien coché ni réordonné, mais il
+    // repart avec sa liste — c'est un usage. Il doit être compté.
+    {
+      const b = monterApplication2GT();
+      if (b && b.window.TrouveTaVoie2GT && b.window.TrouveTaVoie2GT.signalerTelechargement) {
+        const envoyees = [];
+        b.window.pingStats = function (type, val) { envoyees.push(type + ":" + val); };
+        b.window.TrouveTaVoie2GT.signalerTelechargement();
+        const compte = envoyees.filter(function (s) { return s.indexOf("2gt_voeux") === 0; }).length;
+        if (compte === 1) OK("Stat 2GT : télécharger la liste par défaut (sans rien cocher) est bien compté");
+        else KO("Stat 2GT : le téléchargement de la liste par défaut n'est pas compté (angle mort)");
+      } else if (b) {
+        KO("signalerTelechargement() n'est pas exposé — l'angle mort du téléchargement n'est pas couvert");
+      }
+    }
+
+    // Pas de double comptage : cocher PUIS télécharger ne compte qu'une fois.
+    {
+      const b = monterApplication2GT();
+      if (b) {
+        const envoyees = [];
+        b.window.pingStats = function (type, val) { envoyees.push(type + ":" + val); };
+        cocher(b, "design");
+        if (b.window.TrouveTaVoie2GT && b.window.TrouveTaVoie2GT.signalerTelechargement) {
+          b.window.TrouveTaVoie2GT.signalerTelechargement();
+        }
+        const compte = envoyees.filter(function (s) { return s.indexOf("2gt_voeux") === 0; }).length;
+        if (compte === 1) OK("Stat 2GT : cocher puis télécharger ne compte qu'une fois (pas de doublon)");
+        else KO("Stat 2GT : double comptage détecté (" + compte + " envois pour une seule session)");
+      }
+    }
   }
 
   // 4bis. Une vraie option (Design) DOIT, elle, produire un filet sous son vœu.

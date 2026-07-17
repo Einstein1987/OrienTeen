@@ -61,6 +61,10 @@ const FICHE_21 = {
 "CAP Peintre applicateur de revêtements":[4,6,4,2,4,3,7],
 "CAP Menuisier aluminium-verre":[4,6,4,2,4,3,7],
 "CAP Menuisier fabricant":[4,6,4,2,4,3,7],
+// Absent de la Fiche n°21 académique, mais confirmé par le TABLEAU NATIONAL
+// (guide AFFELNET-lycée RS2021, fiche n°11, groupe 25 « Mécanique, électricité,
+// électronique », intitulé officiel « SERRURIER METALLIER »).
+"CAP Métallier":[4,6,3,4,3,2,8],
 "CAP Charpentier bois":[4,6,4,2,4,3,7],
 "CAP Réalisations industrielles en chaudronnerie ou soudage - Option A : chaudronnerie":[4,6,3,4,3,2,8],
 "CAP Conducteur d'installations de production":[5,6,3,4,3,2,7],
@@ -128,9 +132,10 @@ const FICHE_21 = {
 "Bac Pro Artisanat et métiers d'art - Option marchandisage visuel":[4,6,4,2,4,3,7],
 };
 
-/* Formations ABSENTES de la fiche n°21 : on ne peut pas les vérifier.
- * Les taire serait pire que les signaler. */
-const ABSENTES_DE_LA_FICHE = ["CAP Métallier"];
+/* Formations absentes de la Fiche n°21 mais vérifiables autrement : aucune
+ * pour l'instant. Le CAP Métallier, longtemps ici, est désormais confirmé par
+ * le tableau national (fiche n°11) et figure dans FICHE_21 ci-dessus. */
+const ABSENTES_DE_LA_FICHE = [];
 
 /* Coefficients des FAMILLES DE MÉTIERS (lignes « 2NDPRO … 2NDE COMMUNE (FM) »).
  * Seuls les domaines qui correspondent à une vraie famille figurent ici : les

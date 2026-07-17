@@ -178,47 +178,6 @@ console.log("\n\u2500\u2500 PDF DE LA FICHE D'ORIENTATION \u2500\u2500");
 }
 
 /* ==========================================================================
- * CHEMIN 1bis — une formation avec avertissement « À vérifier »
- *
- * CAP Métallier : coefficients non confirmés par la fiche n°21. À l'écran, un
- * bandeau ambre le signale ; le PDF les présentait comme certains. Le PDF est
- * ce que l'élève imprime et montre — l'omission transmet une info incomplète.
- * ======================================================================== */
-console.log("\n\u2500\u2500 PDF AVEC AVERTISSEMENT (CAP M\u00e9tallier) \u2500\u2500");
-{
-  // Le CHEMIN 1 a laissé le chatbot en fin de parcours. On revient au menu.
-  if (typeof window.startMenu === "function") window.eval("startMenu();");
-  const menu = boutons();
-  // On passe par « Je connais la formation » : « métallier » y mène directement.
-  const parFormation = menu.find((b) => /formation/i.test(b.textContent));
-  if (!parFormation) {
-    KO("Le bouton « formation » est introuvable dans le menu");
-  } else {
-    clic(parFormation);
-    doc.getElementById("userInput").value = "métallier";
-    clic(doc.getElementById("sendBtn"));
-    const oui = boutons().filter((x) => /^Oui$/.test(x.textContent));
-    if (oui.length) clic(oui[0]);
-
-    const aWarn = doc.querySelector("#cardDetailsContainer .formation-warning");
-    if (!aWarn) {
-      KO("CAP Métallier : pas d'avertissement à l'écran — scénario à revoir");
-    } else {
-      OK("CAP Métallier : l'avertissement est bien présent à l'écran");
-      const buf = genererPDF("PDF CAP Métallier");
-      if (buf) {
-        const brut = buf.toString("latin1");
-        if (/vérifier|v.rifier/.test(brut)) {
-          OK("Le PDF reprend l'avertissement « À vérifier » (coefficients non présentés comme certains)");
-        } else {
-          KO("Le PDF n'affiche PAS l'avertissement du CAP Métallier");
-        }
-      }
-    }
-  }
-}
-
-/* ==========================================================================
  * CHEMIN 2 — la liste de vœux (2GT)
  *
  * Code entièrement distinct de celui de la fiche : un PDF pro qui marche ne
