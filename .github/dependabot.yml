@@ -1,0 +1,33 @@
+# =============================================================================
+# Dependabot — garde les dépendances à jour, sans surveillance manuelle.
+#
+# POURQUOI (audit, point 11)
+# --------------------------
+# Le workflow épingle les actions GitHub sur leur empreinte (SHA), et
+# package-lock.json fige eslint et jsdom. C'est bon pour la reproductibilité,
+# mais une empreinte figée ne reçoit jamais les correctifs de sécurité : elle
+# vieillit en silence. Dependabot lève ce défaut en OUVRANT UNE PULL REQUEST
+# quand une nouvelle version paraît — à relire et fusionner depuis GitHub, sans
+# Node en local. La CI (npm ci + npm test) valide chaque proposition avant fusion.
+#
+# Rythme mensuel : assez pour rester à jour, assez rare pour ne pas être un bruit.
+# =============================================================================
+
+version: 2
+updates:
+  # Les actions utilisées dans .github/workflows/. Dependabot met à jour le SHA
+  # épinglé ET le commentaire de version lisible qui l'accompagne.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "ci"
+
+  # eslint et jsdom, figés par package-lock.json (outils de validation seulement).
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "deps"
