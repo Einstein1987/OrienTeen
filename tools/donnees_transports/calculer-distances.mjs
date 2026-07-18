@@ -201,8 +201,11 @@ async function main() {
     resultats[row.key] = row.km;
   });
 
+  // On écrit À CÔTÉ du script (comme calculer-durees.mjs), pas dans le dossier
+  // courant : le fichier atterrit ainsi toujours dans tools/donnees_transports/,
+  // quel que soit l'endroit d'où on lance la commande.
   fs.writeFileSync(
-    OUTPUT_FILE,
+    new URL(OUTPUT_FILE, import.meta.url),
     JSON.stringify(resultats, null, 2),
     "utf8"
   );
