@@ -503,6 +503,37 @@ h1 {
 .app-footer-minimal a:hover {
      text-decoration: underline;
 }
+/* Notice « Confidentialité & statistiques ». Couleurs héritées du footer
+   (aucune nouvelle paire texte/fond : le validateur de contrastes n'a rien de
+   plus à déclarer). Mise en page seulement. */
+.app-confidentialite {
+     max-width: 640px;
+     margin: 0 auto 12px;
+     text-align: left;
+}
+.app-confidentialite > summary {
+     cursor: pointer;
+     text-align: center;
+     font-weight: 600;
+     color: var(--teal);
+}
+.app-confidentialite[open] > summary {
+     margin-bottom: 8px;
+}
+.confid-corps p {
+     margin: 6px 0;
+     line-height: 1.45;
+}
+.confid-optout {
+     display: flex;
+     align-items: flex-start;
+     gap: 8px;
+     margin-top: 10px;
+     font-weight: 600;
+}
+.confid-optout input {
+     margin-top: 2px;
+}
 .card-actions {
      display: flex;
      gap: 10px;
