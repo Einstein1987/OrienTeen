@@ -1,0 +1,26 @@
+# =============================================================================
+# Configuration de déploiement Netlify.
+#
+# POURQUOI (audit, point 5)
+# -------------------------
+# Le dépôt contient un dossier src_data/ (~13 Mo de PDF sources : guides ONISEP,
+# fiches académiques, coefficients…). Ils servent à DOCUMENTER et vérifier les
+# données, mais l'application ne les charge jamais. Or Netlify publie la racine
+# du dépôt : sans cette configuration, ces 13 Mo étaient déployés et accessibles
+# publiquement, gonflant chaque déploiement pour rien.
+#
+# La commande ci-dessous s'exécute sur l'image de build de Netlify, AVANT la
+# publication : elle retire src_data/ du site déployé. Elle ne touche PAS au
+# dépôt Git — les sources restent versionnées sur GitHub. Aucune installation
+# locale n'est nécessaire : tout se passe côté Netlify.
+#
+# L'application reste 100 % statique (pas de bundler, pas de génération) : la
+# seule « build » est cette suppression de fichiers non publiés.
+# =============================================================================
+
+[build]
+  publish = "."
+  command = "rm -rf src_data"
+
+# Rappel : les en-têtes de sécurité restent définis dans le fichier _headers
+# (lu par Netlify à la racine du répertoire publié).

@@ -71,9 +71,12 @@ brochure ne dit clairement :
 - **La priorité aux sections européennes.** Une section euro ne se rattrape pas à
   l'inscription, contrairement à une option. L'application la place donc en premier,
   et explique pourquoi.
-- **La couverture du secteur.** L'élève sera affecté dans l'un des 5 lycées. S'il
-  n'en classe que deux, l'administration décidera pour lui. L'application complète
-  la liste avec les lycées restants, du plus proche au plus lointain.
+- **La couverture du secteur.** En classant ses 5 lycées de secteur, l'élève met
+  toutes les chances de son côté d'être affecté dans l'un d'eux (l'affectation
+  dépend des capacités d'accueil ; à défaut, une place peut être proposée à
+  proximité). S'il n'en classe que deux, l'administration décidera pour lui.
+  L'application complète donc la liste avec les lycées restants, du plus proche
+  au plus lointain.
 - **La limite des 10 vœux.** Une ligne rouge marque le seuil Affelnet : au-delà,
   c'est à l'élève d'arbitrer.
 - **Les procédures spécifiques** (PassCCD pour le design, PassSTL pour les
@@ -146,6 +149,7 @@ serveur.** Le site est entièrement statique et hébergé sur Netlify.
 ```
 index.html                     Page unique, deux onglets
 _headers                       En-têtes de sécurité Netlify (dont une CSP stricte)
+netlify.toml                   Déploiement Netlify — exclut src_data/ du site publié
 package.json                   Outils de validation (CI) — PAS de dépendance d'exécution
 package-lock.json              Versions figées d'eslint et jsdom (npm ci reproductible)
 ├── styles/
@@ -246,7 +250,12 @@ un élève.
 | `domaine` / `formation` / `etablissement` | Une fiche pro est affichée |
 | `quiz_lance` | L'élève **clique** sur « faire le quiz » |
 | `quiz_resultat` | Une piste du quiz est consultée (la première seulement) |
-| `2gt_voeux` | L'élève choisit un mode de classement en 2GT |
+| `2gt_voeux` | L'élève **agit** sur ses vœux 2GT : coche une option Affelnet, coche un atout « sur place », réordonne ses lycées, change de mode de classement, ou télécharge sa liste par défaut. La **valeur** précise laquelle de ces actions (ex. « Option Affelnet cochée »). |
+
+Le `2gt_voeux` peut donc partir dès le **premier cochage** d'une option ou d'un atout,
+pas seulement au choix d'un mode de classement — c'est voulu : sans cela, la majorité
+des élèves (ceux qui ne cochent aucune option) restaient invisibles dans les mesures.
+Une seule statistique est envoyée par session côté 2GT.
 
 Ouvrir la page ou changer d'onglet n'envoie rien.
 
