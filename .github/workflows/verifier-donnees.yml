@@ -9,8 +9,21 @@
 # Le but n'est pas de tester le code, mais les DONNÉES : c'est là que les erreurs
 # sont silencieuses, et qu'elles ont des conséquences réelles pour un élève.
 #
-# Pour lancer le même contrôle sur sa machine :
-#     node tools/verifier-donnees.mjs
+# REPRODUCTIBILITÉ (audit, point 11)
+# ----------------------------------
+# Ce workflow doit produire le MÊME résultat aujourd'hui et dans deux ans :
+#   - les dépendances (eslint, jsdom) sont figées par package-lock.json et
+#     installées avec « npm ci » (installation stricte depuis le verrou, sans
+#     jamais aller chercher une version plus récente) ;
+#   - les actions GitHub sont épinglées sur leur EMPREINTE (SHA) et non sur un
+#     tag mobile comme « @v4 » : un tag peut être redéplacé, un SHA non. Le
+#     numéro de version lisible reste en commentaire, et .github/dependabot.yml
+#     propose automatiquement les mises à jour pour que ces empreintes ne
+#     vieillissent pas en silence.
+#
+# Pour lancer les mêmes contrôles sur sa machine :
+#     npm ci
+#     npm test
 # =============================================================================
 
 name: Vérification des données
@@ -33,13 +46,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # actions/checkout@v4.2.2 — épinglé sur le SHA du commit correspondant.
       - name: Récupérer le dépôt
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
+      # actions/setup-node@v4.4.0 — épinglé sur le SHA du commit correspondant.
+      # cache: npm accélère et fiabilise l'installation en réutilisant le cache
+      # npm entre deux exécutions, indexé sur le contenu du package-lock.json.
       - name: Installer Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '20'
+          cache: 'npm'
+
+      # « npm ci » installe EXACTEMENT ce que décrit package-lock.json (eslint et
+      # jsdom, figés), et échoue si le verrou et package.json divergent. jsdom est
+      # donc présent dès maintenant, avant les tests qui en dépendent.
+      - name: Installer les dépendances (verrouillées)
+        run: npm ci
 
       - name: Contrôler la syntaxe de tous les scripts
         run: |
@@ -55,44 +79,37 @@ jobs:
       # no-undef en mode strict attrape les affectations à une variable jamais
       # déclarée (« body = ... » sans let). C'est le bug qui a cassé le 2GT en
       # production : node --check et jsdom (non stricts) ne le voyaient pas, le
-      # navigateur oui. ESLint le voit.
+      # navigateur oui. ESLint (version figée par le verrou) le voit.
       - name: Détecter les variables non déclarées (ESLint no-undef)
-        run: npx --yes eslint@9 --config tools/eslint.config.mjs scripts/
+        run: npm run lint
 
       - name: Vérifier la cohérence des données
-        run: node tools/verifier-donnees.mjs
+        run: npm run verifier:donnees
 
       # 18 coefficients étaient faux (juillet 2026), tous sur le même schéma :
       # la formation portait les coefficients de son DOMAINE au lieu des siens.
       # Un coefficient faux, c'est un élève qui calcule mal ses chances.
       - name: Vérifier les coefficients (fiche technique n°21)
-        run: node tools/verifier-coefficients.mjs
+        run: npm run verifier:coefficients
 
       # Le bouton d'aide — celui des élèves les plus perdus — était à 2,54:1
       # sur blanc, pour un seuil AA de 4,5:1. Illisible pour précisément ceux
       # qu'il ne faut pas perdre. Ce contrôle empêche la palette de redériver.
       - name: Vérifier les contrastes (WCAG 2.1 AA)
-        run: node tools/verifier-contrastes.mjs
-
-      # Le contrôle qui manquait le 13 juillet 2026 : une fonction supprimée mais
-      # encore appelée passait `node --check` sans erreur, et rendait pourtant
-      # toute la voie professionnelle inutilisable en production.
-      # jsdom simule un vrai navigateur. Les deux tests ci-dessous en dépendent :
-      # cette étape doit rester AVANT eux.
-      - name: Installer jsdom (simulation du navigateur)
-        run: npm install --no-save jsdom
+        run: npm run verifier:contrastes
 
       # Le PDF n'était testé par RIEN : test-parcours.mjs remplace jsPDF par un
       # bouchon. C'est ce trou qui a bloqué la mise à jour de la bibliothèque
       # pendant des mois — impossible de savoir ce qu'une bascule casserait.
+      # Ces deux tests s'appuient sur jsdom (installé par « npm ci » ci-dessus).
       - name: Vérifier la génération du PDF (fiche pro + vœux 2GT)
-        run: node tools/test-pdf.mjs
+        run: npm run test:pdf
 
       - name: Tester les parcours utilisateur
-        run: node tools/test-parcours.mjs
+        run: npm run test:parcours
 
       # Le README annonçait « 15 familles », « jsPDF 2.5.1 », « distance réelle »,
       # « polices à internaliser », « jamais au clic » — cinq affirmations fausses.
       # Un README faux est pire qu'un README absent : il donne confiance.
       - name: Vérifier que le README dit la vérité
-        run: node tools/verifier-readme.mjs
+        run: npm run verifier:readme
