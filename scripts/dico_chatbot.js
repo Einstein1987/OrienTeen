@@ -320,11 +320,19 @@ function contientTerme(phrase, terme) {
   return new RegExp("\\b" + echappe(terme) + "(s|es|x)?\\b").test(phrase);
 }
 
+// Nombre maximum de mots analysés. Chaque mot est comparé à tout le vocabulaire
+// (distance de Levenshtein) : sans plafond, un texte très long ferait ramer les
+// téléphones modestes. 30 mots utiles couvrent très largement une réponse
+// d'élève ; au-delà, l'intention est déjà claire (voir aussi LIMITE_SAISIE dans
+// app_pro.js, qui borne la saisie en amont).
+const MAX_MOTS_ANALYSES = 30;
+
 function motsDe(texte) {
   return normalize(texte)
     .replace(/[^a-z0-9\s]/g, " ")
     .split(/\s+/)
-    .filter(function (m) { return m.length > 1 && !MOTS_VIDES.has(m); });
+    .filter(function (m) { return m.length > 1 && !MOTS_VIDES.has(m); })
+    .slice(0, MAX_MOTS_ANALYSES);
 }
 
 /**

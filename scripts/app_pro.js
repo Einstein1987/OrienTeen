@@ -1151,15 +1151,26 @@ function handleFreeText(text){
   }
 }
 
+// Pt 9 — Borne la saisie avant analyse. La zone porte déjà maxlength="300" pour
+// la frappe et le collage, mais la dictée vocale (Web Speech) écrit directement
+// dans input.value SANS passer par maxlength : un long paragraphe dicté pouvait
+// alors nourrir l'analyse par mot (distance de Levenshtein × chaque terme du
+// vocabulaire) et faire ramer un téléphone modeste. On coupe ici par sécurité.
+const LIMITE_SAISIE = 300;
+function lireSaisie() {
+  const brut = input.value.trim();
+  return brut.length > LIMITE_SAISIE ? brut.slice(0, LIMITE_SAISIE) : brut;
+}
+
 sendBtn.addEventListener('click', () => {
-  const text = input.value.trim();
+  const text = lireSaisie();
   if(!text) return;
   input.value = '';
   handleFreeText(text);
 });
 input.addEventListener('keydown', e => {
   if(e.key === 'Enter'){
-    const text = input.value.trim();
+    const text = lireSaisie();
     if(!text) return;
     input.value = '';
     handleFreeText(text);
@@ -1180,8 +1191,30 @@ if(!SpeechRecognitionAPI){
   recognition.maxAlternatives = 1;
   let listening = false;
 
+  // Pt 10 — Consentement avant la première dictée. La reconnaissance vocale est
+  // assurée par le NAVIGATEUR, qui envoie le son du micro à un service tiers
+  // (Google pour Chrome, par exemple) pour le convertir en texte. Cette requête
+  // n'est pas émise par l'application : elle échappe à la règle « le site ne
+  // parle qu'à Netlify et à Google Forms ». Les utilisateurs étant mineurs, on
+  // l'explique clairement et on demande l'accord avant la toute première
+  // activation. L'accord ne vaut que pour la session en cours : rien n'est stocké.
+  let micConsentement = false;
+
   micBtn.addEventListener('click', () => {
     if(listening) return;
+    if(!micConsentement){
+      const ok = window.confirm(
+        "Dictée vocale : pour transformer ta voix en texte, ton navigateur envoie " +
+        "le son de ton micro à un service extérieur (par exemple Google si tu utilises " +
+        "Chrome). L'application, elle, n'enregistre rien et ne reçoit que le texte.\n\n" +
+        "Tu peux aussi simplement écrire ta réponse.\n\nActiver le micro ?"
+      );
+      if(!ok){
+        micNote.textContent = "Micro non activé. Tu peux écrire ta réponse.";
+        return;
+      }
+      micConsentement = true;
+    }
     recognition.start();
   });
   recognition.addEventListener('start', () => {

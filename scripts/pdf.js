@@ -42,6 +42,18 @@
 
   /* ---- Utilitaires communs ---- */
 
+  // Date du jour au format AAAA-MM-JJ, en heure LOCALE.
+  // toISOString() renvoie l'heure UTC : entre minuit et 2 h l'été (France en
+  // UTC+2), le nom du fichier portait la date de la VEILLE. Un élève qui
+  // télécharge sa fiche à 0 h 30 le 15 obtenait « …-14.pdf ». On lit donc les
+  // composantes locales de la date.
+  function dateFichier() {
+    var d = new Date();
+    var mois = String(d.getMonth() + 1).padStart(2, "0");
+    var jour = String(d.getDate()).padStart(2, "0");
+    return d.getFullYear() + "-" + mois + "-" + jour;
+  }
+
   function saut(doc, y, besoin) {
     if (y + besoin > HAUT - M - 10) { doc.addPage(); return M + 5; }
     return y;
@@ -329,7 +341,7 @@
       "et/ou à la PsyEN de l'établissement. Sous réserve de modifications : vérifie les " +
       "informations avant de formuler tes vœux.");
     piedDePage(doc);
-    doc.save("mon-projet-orientation-" + new Date().toISOString().slice(0, 10) + ".pdf");
+    doc.save("mon-projet-orientation-" + dateFichier() + ".pdf");
   }
 
   /* ========================================================================
@@ -474,7 +486,7 @@
       "(MAJ 16/04/2026). Sous réserve de modifications : vérifie auprès de ton professeur " +
       "principal ou de la PsyEN avant de formuler tes vœux.");
     piedDePage(doc);
-    doc.save("mes-voeux-2GT-" + new Date().toISOString().slice(0, 10) + ".pdf");
+    doc.save("mes-voeux-2GT-" + dateFichier() + ".pdf");
   }
 
   /* ---- Aiguillage selon l'onglet actif ---- */
