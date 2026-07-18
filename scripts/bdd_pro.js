@@ -25,8 +25,11 @@
  *
  * CAP Jardinier paysagiste : présent dans la fiche technique n°21 avec
  *   [4,5,3,3,4,3,8]. (Contrairement à ce qu'indiquait un ancien commentaire, il
- *   n'est pas absent.) Le seul cas hors fiche n°21 était le CAP Métallier,
- *   désormais confirmé par le tableau national — plus aucune formation en attente.
+ *   n'est pas absent.) Le seul cas hors fiche n°21 est le CAP Métallier :
+ *   coefficient [4,6,3,4,3,2,8] confirmé par le TABLEAU NATIONAL (guide
+ *   AFFELNET-lycée RS2021), mais absent de la fiche n°21 académique 2026. Source
+ *   vieille de cinq ans, à reconfirmer auprès du CIO / DRAIO pour 2026. Le
+ *   validateur des coefficients l'annonce séparément (« via le tableau national »).
  * ========================================================================== */
 
 // -----------------------------------------------------------------------------
@@ -3535,33 +3538,41 @@ function getDistanceFromCorbeil(etablissement) {
  * identiques : « RER D puis RER D », voire « Bus 4306 puis Bus 4306 ». Pour un
  * élève, cette répétition ressemble à un bug. On fusionne donc les doublons
  * successifs. Quand ce sont des RER (branches différentes d'une même ligne), la
- * répétition signalait une correspondance réelle : on la conserve sous forme
- * lisible « (avec correspondance) » plutôt que de la laisser deviner. Pour un
- * bus répété (artefact du calcul), on fusionne sans rien ajouter. */
+ * répétition signale une correspondance réelle : on l'annote SUR CE SEGMENT
+ * (« RER D (avec correspondance) puis Bus 399 ») et non en fin de trajet — sinon
+ * on pourrait croire que la correspondance concerne le dernier mode cité (le bus).
+ * Pour un bus répété (artefact du calcul), on fusionne sans rien ajouter. */
 function nettoyerTrajet(trajet) {
   if (!trajet) return trajet;
   const segments = trajet.split(" puis ").map(function (s) { return s.trim(); }).filter(Boolean);
   const out = [];
-  let correspondance = false;
   segments.forEach(function (seg) {
-    if (out.length && out[out.length - 1] === seg) {
-      if (/^RER/.test(seg)) correspondance = true;   // même ligne RER = changement de branche
-      return;                                        // on ne répète pas le segment
+    const dernier = out.length ? out[out.length - 1] : null;
+    // On compare au dernier segment retenu, en ignorant une éventuelle annotation
+    // « (avec correspondance) » déjà posée (cas de trois segments identiques).
+    const base = dernier ? dernier.replace(/ \(avec correspondance\)$/, "") : null;
+    if (base !== null && base === seg) {
+      // Doublon. RER = changement de branche → correspondance réelle, annotée sur
+      // ce segment (une seule fois). Bus répété = artefact → fusion silencieuse.
+      if (/^RER/.test(seg) && !/ \(avec correspondance\)$/.test(dernier)) {
+        out[out.length - 1] = seg + " (avec correspondance)";
+      }
+      return;
     }
     out.push(seg);
   });
-  return out.join(" puis ") + (correspondance ? " (avec correspondance)" : "");
+  return out.join(" puis ");
 }
 
 function sortEtablissementsByDistance(domains) {
   Object.values(domains).forEach(domain => {
     domain.formations.forEach(formation => {
-      formation.etablissements.forEach(e => { 
-        e.distanceKm = getDistanceFromCorbeil(e); 
+      formation.etablissements.forEach(e => {
+        e.distanceKm = getDistanceFromCorbeil(e);
         const d = getDureeFromCorbeil(e);
-        if (d) { 
-          e.dureeMin = d.dureeMin; 
-          e.trajet = nettoyerTrajet(d.trajet); 
+        if (d) {
+          e.dureeMin = d.dureeMin;
+          e.trajet = nettoyerTrajet(d.trajet);
         }
       });
       formation.etablissements.sort((a, b) => {

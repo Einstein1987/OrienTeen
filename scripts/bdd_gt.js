@@ -31,17 +31,20 @@ const SOURCE_2GT = {
 const REGLE_FILET_SECURITE =
   "Un vœu avec option (ex. « Doisneau Théâtre ») et le vœu simple (« Doisneau ») " +
   "sont DEUX vœux différents, avec chacun leur nombre de places. " +
-  "Ces 5 lycées sont tes lycées de secteur : tu es assuré d'être affecté dans l'un d'eux — " +
-  "mais pas forcément dans celui que tu préfères, ni sur l'option que tu demandes. " +
+  "Ces 5 lycées sont tes lycées de secteur : en les classant tous, tu mets toutes les chances " +
+  "de ton côté d'être affecté dans l'un d'eux. L'affectation dépend toutefois des places " +
+  "disponibles — tu n'iras pas forcément dans celui que tu préfères, ni sur l'option que tu " +
+  "demandes ; et si aucun ne peut t'accueillir, une place peut t'être proposée à proximité. " +
   "Pense donc à ajouter des vœux « sans option » sous tes vœux avec option : " +
-  "c'est ce qui te permet de rester dans le lycée que tu vises.";
+  "c'est ce qui te permet de garder la main sur le lycée que tu vises.";
 
 /* -----------------------------------------------------------------------------
  * RÈGLES À AFFICHER DANS L'APPLICATION
  * -------------------------------------------------------------------------- */
 const REGLE_MAX_DEUX_OPTIONS =
-  "En 2nde GT, tu peux suivre au maximum DEUX enseignements optionnels. " +
-  "Inutile d'en viser plus : coche seulement ce qui compte vraiment pour toi.";
+  "Une fois affecté au lycée, tu pourras suivre au maximum DEUX enseignements optionnels. " +
+  "Ici, rien ne t'empêche de comparer plusieurs possibilités : garde celles que tu " +
+  "accepterais vraiment.";
 
 const REGLE_VOEUX_EXCLUSIFS =
   "Les vœux s'excluent : il n'existe pas de vœu « théâtre + section euro » dans le même lycée. " +

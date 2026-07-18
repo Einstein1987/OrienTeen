@@ -147,13 +147,17 @@
     // Rappel de la règle des deux enseignements optionnels. Discret par défaut,
     // il se renforce dès que l'élève coche une 3e option — c'est là qu'il sert.
     // (La règle était définie dans bdd_gt.js mais n'était affichée nulle part.)
+    // Attention à ne pas confondre : « au max 2 options » = ce qu'on SUIT une fois
+    // affecté ; ça ne limite PAS le nombre de vœux alternatifs qu'on peut classer
+    // (chaque option demandée peut créer un vœu distinct, dans la limite de 10).
     const tropDOptions = selection.size > 2;
     const rappelDeux =
       '<p class="gt-rappel-deux' + (tropDOptions ? " is-warn" : "") + '">' +
       (tropDOptions
-        ? "<strong>Tu as coché " + selection.size + " options.</strong> Or, en 2nde GT, tu " +
-          "pourras en suivre au maximum DEUX. Garde seulement celles qui comptent vraiment : " +
-          "en cocher plus n'augmente pas tes chances, ça disperse ta liste de vœux."
+        ? "<strong>Tu compares " + selection.size + " options.</strong> C'est possible, mais " +
+          "garde deux choses en tête : chaque option demandée sur Affelnet crée un vœu distinct, " +
+          "et tu es limité à DIX vœux en tout ; et une fois affecté, tu ne suivras au maximum que " +
+          "DEUX enseignements optionnels. Ne garde donc que des choix que tu accepterais réellement."
         : REGLE_MAX_DEUX_OPTIONS) +
       '</p>';
 
@@ -299,15 +303,23 @@
       });
     }
 
-    // Les lycées qui proposent au moins un critère coché, TRIÉS PAR DISTANCE
-    // (plus de score : voir le commentaire de proposeQuelqueChose). La sélection
-    // ne classe pas, elle remonte simplement ces lycées en tête de liste.
+    // Les lycées qui proposent au moins un critère coché. On les remonte en tête,
+    // mais dans un ORDRE qui ne trahit jamais l'élève : un lycée proposant une
+    // VRAIE option demandée (Affelnet) passe toujours devant un lycée qui ne
+    // propose qu'un atout « sur place ». Un atout annote un lycée, il ne déplace
+    // jamais un vœu à option au-dessus. À rang égal (deux options, ou deux atouts
+    // seuls), on départage par la distance — critère factuel et neutre.
     const retenus = ORDRE_LYCEES
       .map(function (id) {
         return { id: id, lyc: LYCEES_2GT[id], atouts: atoutsDe(id) };
       })
       .filter(function (o) { return proposeQuelqueChose(o.id); })
-      .sort(function (a, b) { return parTrajet(a.lyc, b.lyc); });
+      .sort(function (a, b) {
+        const oa = scoreLycee(a.id) > 0 ? 0 : 1;   // 0 = propose une vraie option
+        const ob = scoreLycee(b.id) > 0 ? 0 : 1;
+        if (oa !== ob) return oa - ob;
+        return parTrajet(a.lyc, b.lyc);
+      });
 
     const vus = {};                        // codes déjà placés, par lycée
     retenus.forEach(function (o) { vus[o.id] = new Set(); });
@@ -384,16 +396,17 @@
     }
 
     // ---- Couverture du secteur ----
-    // Les 5 lycées sont des lycées de secteur : l'élève sera affecté dans l'un
-    // d'eux, qu'il ait coché une option ou non. On complète donc TOUJOURS la
-    // liste avec les vœux simples des lycées encore absents, du plus proche au
-    // plus loin.
+    // Les 5 lycées sont des lycées de secteur : en les classant tous, l'élève met
+    // toutes les chances de son côté d'être affecté dans l'un d'eux (l'affectation
+    // dépend des capacités d'accueil ; à défaut, une place peut être proposée à
+    // proximité). On complète donc TOUJOURS la liste avec les vœux simples des
+    // lycées encore absents, du plus proche au plus loin.
     //
     // C'est cette section qui gère le cas le plus fréquent : l'élève ne veut
     // AUCUNE option. Avant, la couverture était conditionnée à `liste.length > 0`
-    // et cet élève repartait avec zéro vœu à classer — alors qu'on lui disait
-    // « tu seras affecté dans l'un de ces 5 lycées ». Le filet de sécurité le
-    // plus important, celui des élèves sans projet d'option, était désactivé.
+    // et cet élève repartait avec zéro vœu à classer — alors qu'on l'invitait à
+    // classer ses 5 lycées de secteur. Le filet de sécurité le plus important,
+    // celui des élèves sans projet d'option, était désactivé.
     const dejaListes = new Set(liste.map(function (x) { return x.lyc.id; }));
     const reste = ORDRE_LYCEES.filter(function (id) { return !dejaListes.has(id); });
 
@@ -504,16 +517,20 @@
           ? '<li class="gt-sep-li"><div>' +
             '<strong>Tes 5 lycées de secteur, du plus proche au plus loin</strong>' +
             '<span>Tu ne cherches pas d\'option particulière, et c\'est très bien : la plupart ' +
-            'des élèves sont dans ce cas. Tu seras affecté dans l\'un de ces 5 lycées. En les ' +
-            'classant tous — ici du plus proche au plus lointain — <b>c\'est toi qui décides de ' +
+            'des élèves sont dans ce cas. En classant tes 5 lycées de secteur, tu mets toutes ' +
+            'les chances de ton côté d\'être affecté dans l\'un d\'eux — cela dépend des places ' +
+            'disponibles. Ici, du plus proche au plus lointain : <b>c\'est toi qui décides de ' +
             'l\'ordre</b>, pas l\'administration. Tu peux les réordonner comme tu veux.</span>' +
             '</div></li>'
           : '<li class="gt-sep-li"><div>' +
             '<strong>Pour couvrir tous tes lycées de secteur</strong>' +
-            '<span>Tu seras forcément affecté dans l\'un de ces 5 lycées. Si tu n\'en classes ' +
-            'que quelques-uns et qu\'ils sont pleins, c\'est l\'administration qui choisira pour toi. ' +
-            'En ajoutant les vœux ci-dessous, du plus proche au plus lointain, <b>c\'est toi qui gardes ' +
-            'la main jusqu\'au bout</b>. Tu restes libre de les retirer ou de les réordonner.</span>' +
+            '<span>En classant tous tes lycées de secteur, tu mets toutes les chances de ton ' +
+            'côté d\'être affecté dans l\'un d\'eux (selon les places disponibles). Si tu n\'en ' +
+            'classes que quelques-uns et qu\'ils sont pleins, c\'est l\'administration qui choisira ' +
+            'pour toi ; et si aucun ne peut t\'accueillir, une place peut t\'être proposée à ' +
+            'proximité. En ajoutant les vœux ci-dessous, du plus proche au plus lointain, ' +
+            '<b>c\'est toi qui gardes la main jusqu\'au bout</b>. Tu restes libre de les retirer ' +
+            'ou de les réordonner.</span>' +
             '</div></li>';
       }
 

@@ -301,18 +301,26 @@ function addUserMessage(text){
   chatlog.scrollTop = chatlog.scrollHeight;
 }
 
+function statsRefusees() {
+    // Refus « pour cette visite » : on lit la case au moment de l'envoi. Pas de
+    // stockage (RGPD, mineurs) — le choix vaut pour la session, comme annoncé.
+    const c = document.getElementById("statsOptOut");
+    return !!(c && c.checked);
+}
+
 function pingStats(type, valeur) {
-    const FORM_ID = "1FAIpQLSfG2xzc8VM2r52ae0MVS--AuzaHgFO6Mth6csdnuetRXi0cYw"; 
+    if (statsRefusees()) return;
+    const FORM_ID = "1FAIpQLSfG2xzc8VM2r52ae0MVS--AuzaHgFO6Mth6csdnuetRXi0cYw";
     const ENTRY_TYPE   = "entry.1851976194";
-    const ENTRY_VALEUR = "entry.721362482"; 
+    const ENTRY_VALEUR = "entry.721362482";
     const url = `https://docs.google.com/forms/d/e/${FORM_ID}/formResponse`;
     const formData = new FormData();
     formData.append(ENTRY_TYPE, type);
     formData.append(ENTRY_VALEUR, valeur || "");
-    fetch(url, { 
-      method: 'POST', 
-      mode: 'no-cors', 
-      body: formData 
+    fetch(url, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: formData
     })
     .catch(err => console.error("Erreur stats :", err));
 }
@@ -735,6 +743,13 @@ function nextQuizStep(indexReponse) {
   poserQuestionQuiz();
 }
 
+// Nombre maximum de pistes affichées d'emblée. Au-delà (rares égalités multiples
+// pile en frontière du top 3), on NE TRANCHE PAS arbitrairement : les secteurs
+// supplémentaires arrivés à égalité stricte sont montrés à la demande, via un
+// bouton. L'audit a mesuré ~0,50 % de parcours produisant plus de 4 pistes
+// (jusqu'à 7) : ce plafond évite d'afficher jusqu'à sept boutons d'un coup.
+const PLAFOND_PISTES_QUIZ = 4;
+
 // Trois pistes, jamais une seule : c'est l'élève qui choisit celle qu'il veut voir.
 function afficherResultatQuiz() {
   const top = calculerResultatQuiz(quizReponses);
@@ -747,32 +762,64 @@ function afficherResultatQuiz() {
   }
 
   state = 'quiz_resultat';
+
+  const principaux = top.slice(0, PLAFOND_PISTES_QUIZ);
+  const nbAutres   = top.length - principaux.length;
+
   // Le nombre de pistes n'est pas toujours trois : on en montre parfois quatre
-  // quand deux se retrouvent à égalité stricte à la frontière du top 3 (les
+  // quand plusieurs se retrouvent à égalité stricte à la frontière du top 3 (les
   // départager serait arbitraire), et moins si l'élève n'a ouvert que peu de
-  // secteurs. Le message s'adapte donc au nombre réel.
-  const n = top.length;
+  // secteurs. Le message s'adapte donc au nombre réellement affiché.
+  const n = principaux.length;
   const combien = n === 1 ? "le secteur" :
                   n === 2 ? "les deux secteurs" :
                   n === 3 ? "les trois secteurs" :
                             "les " + n + " secteurs";
   const pluriel = n === 1 ? "celui-ci" : "celui que tu veux";
+
+  const lignes = principaux.map(function (o) {
+    const pct = Math.round(o.affinite * 100);
+    return { label: DOMAINS[o.domainKey].label + " — " + pct + " %",
+             action: "quiz_choix", payload: o.domainKey };
+  });
+  // Des secteurs supplémentaires arrivés À ÉGALITÉ au-delà du plafond ? On ne les
+  // cache pas et on n'en tranche aucun : on propose de les afficher.
+  if (nbAutres > 0) {
+    lignes.push({
+      label: "Voir " + (nbAutres === 1 ? "l'autre secteur" : "les " + nbAutres + " autres secteurs") +
+             " arrivé" + (nbAutres === 1 ? "" : "s") + " à égalité",
+      action: "quiz_voir_autres", payload: null
+    });
+  }
+  lignes.push({ label: "Aucune ne me parle, refaire le quiz", action: "start_quiz", payload: null });
+
   addBotMessage(
     "Voilà, c'est fini ! D'après tes réponses, voici " + combien + " " +
-    "qui te correspondent le mieux. Rien n'est figé : clique sur " + pluriel + " " +
+    "qui te correspondent le mieux" +
+    (nbAutres > 0 ? " (d'autres sont arrivés juste à égalité — tu pourras les afficher)" : "") + ". " +
+    "Rien n'est figé : clique sur " + pluriel + " " +
     "pour le découvrir" + (n > 1 ? ", tu pourras revenir voir les autres ensuite." : "."),
-    top.map(function (o) {
+    lignes,
+    // Cette ligne reste CLIQUABLE : l'élève doit pouvoir consulter les pistes
+    // l'une après l'autre, comme le message le lui promet.
+    { reutilisable: true }
+  );
+}
+
+// Montre les secteurs arrivés à égalité stricte au-delà du plafond d'affichage.
+// Recalculé depuis les réponses (fonction pure) : aucun état à mémoriser entre
+// les deux tours de parole.
+function afficherAutresPistesQuiz() {
+  const autres = calculerResultatQuiz(quizReponses).slice(PLAFOND_PISTES_QUIZ);
+  if (!autres.length) return;
+  addBotMessage(
+    "Ces secteurs sont arrivés exactement à égalité avec les précédents — à toi de voir " +
+    "si l'un d'eux te parle :",
+    autres.map(function (o) {
       const pct = Math.round(o.affinite * 100);
-      return {
-        label: DOMAINS[o.domainKey].label + " — " + pct + " %",
-        action: "quiz_choix",
-        payload: o.domainKey
-      };
-    }).concat([
-      { label: "Aucune ne me parle, refaire le quiz", action: "start_quiz", payload: null }
-    ]),
-    // Cette ligne reste CLIQUABLE : l'élève doit pouvoir consulter les trois
-    // pistes l'une après l'autre, comme le message le lui promet.
+      return { label: DOMAINS[o.domainKey].label + " — " + pct + " %",
+               action: "quiz_choix", payload: o.domainKey };
+    }),
     { reutilisable: true }
   );
 }
@@ -1088,6 +1135,9 @@ function applyChoice(action, payload){
   }
   else if (action === "quiz_choix") {
     choisirPisteQuiz(payload);
+  }
+  else if (action === "quiz_voir_autres") {
+    afficherAutresPistesQuiz();
   }
   else if (action === "menu") {
     startMenu("Pas de problème. Que veux-tu faire maintenant ?", true);
