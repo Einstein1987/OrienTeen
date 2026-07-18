@@ -1,0 +1,25 @@
+{
+  "name": "trouvetavoie",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Aide à l'orientation post-3e (voie pro + 2GT) — collège La Nacelle, Corbeil-Essonnes. Application statique : ce fichier ne sert QU'aux outils de validation (CI), jamais à l'application elle-même, qui reste du HTML/CSS/JS sans build ni dépendance d'exécution.",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "lint": "eslint --config tools/eslint.config.mjs scripts/",
+    "verifier:donnees": "node tools/verifier-donnees.mjs",
+    "verifier:coefficients": "node tools/verifier-coefficients.mjs",
+    "verifier:contrastes": "node tools/verifier-contrastes.mjs",
+    "test:pdf": "node tools/test-pdf.mjs",
+    "test:parcours": "node tools/test-parcours.mjs",
+    "verifier:readme": "node tools/verifier-readme.mjs",
+    "test": "npm run lint && npm run verifier:donnees && npm run verifier:coefficients && npm run verifier:contrastes && npm run test:pdf && npm run test:parcours && npm run verifier:readme"
+  },
+  "devDependencies": {
+    "eslint": "9.39.5",
+    "jsdom": "29.1.1"
+  }
+}
