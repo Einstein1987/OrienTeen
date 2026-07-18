@@ -55,10 +55,43 @@ window.btoa = (s) => Buffer.from(s, "binary").toString("base64");
 window.atob = (s) => Buffer.from(s, "base64").toString("binary");
 
 // jsdom n'implémente pas innerText — or pdf.js s'en sert pour lire les lycées
-// depuis la fiche. Sans ce complément, le test échouerait pour une mauvaise raison.
+// depuis la fiche, en comptant sur les SAUTS DE LIGNE entre le nom, la ville et
+// le trajet (trois éléments de bloc). L'ancien complément renvoyait un simple
+// textContent : tout était concaténé sur une ligne, pdf.js recevait une chaîne
+// mashée, et un trajet tronqué passait quand même le test. On émule donc innerText
+// fidèlement : chaque élément de bloc (div, p, li, table…) et chaque <br>
+// introduit un retour à la ligne, comme le ferait un vrai navigateur.
+const BLOCS_INNERTEXT = new Set([
+  "DIV", "P", "LI", "UL", "OL", "TR", "TABLE", "THEAD", "TBODY", "SECTION",
+  "ARTICLE", "HEADER", "FOOTER", "H1", "H2", "H3", "H4", "H5", "H6",
+]);
+function emulerInnerText(el) {
+  function parcourir(node) {
+    let out = "";
+    node.childNodes.forEach(function (n) {
+      if (n.nodeType === 3) {                       // nœud texte
+        out += n.textContent;
+      } else if (n.nodeType === 1) {                // élément
+        if (n.tagName === "BR") { out += "\n"; return; }
+        const bloc = BLOCS_INNERTEXT.has(n.tagName);
+        if (bloc) out += "\n";
+        out += parcourir(n);
+        if (bloc) out += "\n";
+      }
+    });
+    return out;
+  }
+  return parcourir(el)
+    .replace(/\u00a0/g, " ")
+    .replace(/[ \t]+/g, " ")
+    .replace(/ *\n */g, "\n")
+    .replace(/\n{2,}/g, "\n")
+    .replace(/^\n+|\n+$/g, "");
+}
 Object.defineProperty(window.HTMLElement.prototype, "innerText", {
-  get() { return this.textContent.replace(/\u00a0/g, " "); },
+  get() { return emulerInnerText(this); },
   set(v) { this.textContent = v; },
+  configurable: true,
 });
 
 console.log("\n\u2500\u2500 CHARGEMENT DE jsPDF \u2500\u2500");
@@ -137,6 +170,21 @@ console.log("\n\u2500\u2500 PDF DE LA FICHE D'ORIENTATION \u2500\u2500");
       KO("La fiche ne se remplit pas — impossible de tester le PDF");
     } else {
       OK("Fiche remplie : " + blocs + " bloc(s) de formation");
+
+      // Le PDF lit chaque établissement via innerText et attend UNE LIGNE PAR
+      // information (nom / ville / trajet). Si l'émulation les concatène, le
+      // trajet se retrouve collé à la ville et finit tronqué à l'export — sans
+      // que le test s'en aperçoive. On vérifie donc la fidélité ligne à ligne.
+      const estab0 = doc.querySelector("#cardDetailsContainer .estab");
+      const lignesEstab = estab0
+        ? estab0.innerText.split("\n").map(function (s) { return s.trim(); }).filter(Boolean)
+        : [];
+      if (lignesEstab.length >= 2) {
+        OK("innerText restitue " + lignesEstab.length + " lignes par établissement (nom / ville / trajet)");
+      } else {
+        KO("innerText concatène les lignes de l'établissement (émulation infidèle) : « " +
+           (estab0 ? estab0.innerText : "(aucun .estab)") + " »");
+      }
 
       const buf = genererPDF("PDF de la fiche");
       if (buf) {

@@ -531,6 +531,31 @@ console.log("\n── CLASSEMENT 2GT ──");
     }
   }
 
+  // 2 bis. Un atout NE DOIT PAS passer devant une vraie option (point 3 audit).
+  //   biotech = option demandée sur Affelnet, proposée par Parc des Loges (30 min).
+  //   sp_management = simple atout, proposé notamment par Doisneau (26 min, + proche).
+  //   Avant correctif : Doisneau (atout seul) remontait en tête par distance, son
+  //   vœu simple passait AVANT le vœu Biotechnologies du Parc des Loges.
+  {
+    const a = monterApplication2GT();
+    if (a && cocher(a, "biotech") && cocher(a, "sp_management")) {
+      strat(a, "lycee");
+      const v = voeuxDe(a.doc);
+      const lyc = (li) => ((li.querySelector(".gt-v-lyc") || {}).textContent || "");
+      const idxParc = v.findIndex((li) => /Parc des Loges/i.test(lyc(li)));
+      const idxDois = v.findIndex((li) => /Doisneau/i.test(lyc(li)));
+      if (idxParc !== -1 && (idxDois === -1 || idxParc < idxDois)) {
+        OK("Atout + option : le vœu à option (Parc des Loges) passe avant le lycée à atout seul (Doisneau)");
+      } else {
+        KO("Atout + option : Doisneau (atout seul) est placé avant le vœu Biotechnologies du Parc des Loges");
+      }
+      if (idxParc === 0) OK("Atout + option : le vœu à option est bien en tête de liste");
+      else KO("Atout + option : le 1er vœu n'est pas le lycée à option (index " + idxParc + ")");
+    } else if (a) {
+      KO("Critères « biotech » et/ou « sp_management » introuvables");
+    }
+  }
+
   // 3. Badge factuel : plus de chiffre, donc aucune contradiction possible.
   {
     const a = monterApplication2GT();
@@ -799,6 +824,31 @@ console.log("\n── RÈGLE DES DEUX OPTIONS (point 7) ──");
   }
 }
 
+console.log("\n── REFUS DES STATISTIQUES (point 4 audit) ──");
+{
+  const app = monterApplication();
+  if (!app) {
+    KO("Impossible de monter l'application pour tester le refus de statistiques");
+  } else {
+    let envois = 0;
+    app.window.fetch = () => { envois++; return Promise.resolve({ ok: true }); };
+    const cb = app.doc.getElementById("statsOptOut");
+    if (!cb) {
+      KO("La case « ne pas envoyer de statistiques » est absente de la page");
+    } else {
+      app.window.eval("pingStats('test','A');");
+      const avant = envois;
+      cb.checked = true;
+      app.window.eval("pingStats('test','B');");
+      if (avant === 1 && envois === 1) {
+        OK("Refus des statistiques : coché, plus aucune statistique n'est envoyée");
+      } else {
+        KO("Refus des statistiques : envois avant=" + avant + ", après refus=" + envois + " (le refus n'est pas respecté)");
+      }
+    }
+  }
+}
+
 console.log("\n── TRAJETS SANS DOUBLON (point 8) ──");
 {
   // nettoyerTrajet est globale (bdd_pro.js). On la teste directement.
@@ -808,7 +858,8 @@ console.log("\n── TRAJETS SANS DOUBLON (point 8) ──");
     const cas = [
       ["RER D puis RER D", "RER D (avec correspondance)"],
       ["Bus 4306 puis Bus 4306", "Bus 4306"],
-      ["RER D puis RER D puis RER C", "RER D puis RER C (avec correspondance)"],
+      ["RER D puis RER D puis RER C", "RER D (avec correspondance) puis RER C"],
+      ["RER D puis RER D puis Bus 399", "RER D (avec correspondance) puis Bus 399"],
       ["Bus 4245 puis RER D", "Bus 4245 puis RER D"],
     ];
     let ok = 0;
@@ -867,10 +918,50 @@ console.log("\n── DÉPARTAGE DU QUIZ (point 5) ──");
     OK("Quiz : aucune égalité stricte rencontrée dans l'échantillon (départage net)");
   }
 
-  // 3. Jamais plus que nécessaire : sur un cas net, exactement 3 pistes.
+  // 3. La fonction pure PEUT renvoyer plus de 4 pistes en cas d'égalités
+  //    strictes multiples (l'audit a mesuré jusqu'à 7). C'est VOULU : elle ne
+  //    tranche pas arbitrairement. Ce qui doit rester borné, c'est l'AFFICHAGE —
+  //    vérifié dans la section suivante.
   const net = calc([QUIZ[0].reponses[0]]);   // une seule réponse → peu de secteurs
-  if (net.length >= 1 && net.length <= 4) OK("Quiz : le nombre de pistes reste raisonnable (1 à 4)");
-  else KO("Quiz : nombre de pistes inattendu (" + net.length + ")");
+  if (net.length >= 1) OK("Quiz : au moins une piste dégagée sur un cas simple");
+  else KO("Quiz : aucune piste sur un cas simple (" + net.length + ")");
+}
+
+console.log("\n── PLAFOND D'AFFICHAGE DES PISTES (point 4) ──");
+{
+  // La fonction pure peut renvoyer jusqu'à 7 secteurs ex æquo ; l'écran ne doit
+  // jamais afficher 7 boutons d'un coup. On force 7 ex æquo via un stub et on
+  // vérifie que l'affichage plafonne à 4, avec un bouton pour révéler le reste.
+  const app = monterApplication();
+  if (!app) {
+    KO("Impossible de monter l'application pour tester le plafond des pistes");
+  } else {
+    const cles = (lire("scripts/bdd_pro.js").match(/\n {2}([a-z_]+):\s*\{/g) || [])
+      .map((s) => s.trim().replace(/:.*/, "")).slice(0, 7);
+    // Stub de la fonction pure : 7 secteurs à égalité stricte. afficherResultatQuiz
+    // relit lui-même DOMAINS[clé].label, donc des clés réelles suffisent.
+    app.window.calculerResultatQuiz = () =>
+      cles.map((k) => ({ domainKey: k, label: k, score: 10, affinite: 0.9 }));
+    app.window.afficherResultatQuiz();
+
+    const pistesAffichees = () =>
+      boutons(app.doc).filter((b) => /%\s*$/.test(b.textContent));
+
+    const n1 = pistesAffichees().length;
+    if (n1 >= 1 && n1 <= 4) OK("Quiz : au plus 4 pistes affichées d'emblée, même avec 7 ex æquo (vu : " + n1 + ")");
+    else KO("Quiz : " + n1 + " pistes affichées d'emblée (plafond de 4 non respecté)");
+
+    const voir = boutons(app.doc).find((b) => /à égalité/i.test(b.textContent));
+    if (!voir) {
+      KO("Quiz : aucun bouton pour révéler les secteurs ex æquo au-delà du plafond");
+    } else {
+      OK("Quiz : un bouton « voir les autres à égalité » est proposé");
+      cliquer(app, voir);
+      const n2 = pistesAffichees().length;
+      if (n2 === 3) OK("Quiz : les 3 secteurs ex æquo restants s'affichent à la demande");
+      else KO("Quiz : révélation des ex æquo inattendue (" + n2 + " au lieu de 3)");
+    }
+  }
 }
 
 console.log("\n── FOCUS CLAVIER (2GT) ──");

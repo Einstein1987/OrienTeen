@@ -283,7 +283,10 @@ OK(CRITERES_SUR_PLACE.length + " atouts et " + Object.keys(SERIES_TECHNO_2GT).le
       for (const e of f.etablissements) {
         if (!e.trajet) continue;
         const propre = nettoyerTrajet(e.trajet);
-        const base = propre.replace(" (avec correspondance)", "");
+        // L'annotation « (avec correspondance) » est désormais posée SUR le
+        // segment concerné (et peut apparaître plusieurs fois) : on la retire
+        // partout avant de comparer les segments entre eux.
+        const base = propre.replace(/ \(avec correspondance\)/g, "");
         const segs = base.split(" puis ").map((s) => s.trim());
         for (let i = 1; i < segs.length; i++) {
           if (segs[i] === segs[i - 1]) {

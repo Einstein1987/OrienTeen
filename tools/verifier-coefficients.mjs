@@ -61,10 +61,6 @@ const FICHE_21 = {
 "CAP Peintre applicateur de revêtements":[4,6,4,2,4,3,7],
 "CAP Menuisier aluminium-verre":[4,6,4,2,4,3,7],
 "CAP Menuisier fabricant":[4,6,4,2,4,3,7],
-// Absent de la Fiche n°21 académique, mais confirmé par le TABLEAU NATIONAL
-// (guide AFFELNET-lycée RS2021, fiche n°11, groupe 25 « Mécanique, électricité,
-// électronique », intitulé officiel « SERRURIER METALLIER »).
-"CAP Métallier":[4,6,3,4,3,2,8],
 "CAP Charpentier bois":[4,6,4,2,4,3,7],
 "CAP Réalisations industrielles en chaudronnerie ou soudage - Option A : chaudronnerie":[4,6,3,4,3,2,8],
 "CAP Conducteur d'installations de production":[5,6,3,4,3,2,7],
@@ -132,9 +128,23 @@ const FICHE_21 = {
 "Bac Pro Artisanat et métiers d'art - Option marchandisage visuel":[4,6,4,2,4,3,7],
 };
 
-/* Formations absentes de la Fiche n°21 mais vérifiables autrement : aucune
- * pour l'instant. Le CAP Métallier, longtemps ici, est désormais confirmé par
- * le tableau national (fiche n°11) et figure dans FICHE_21 ci-dessus. */
+/* Formations ABSENTES de la fiche n°21 académique 2026, mais dont le coefficient
+ * est vérifiable par une autre source officielle : le TABLEAU NATIONAL des
+ * coefficients (guide AFFELNET-lycée RS2021). On les valide comme les autres,
+ * mais on les compte et on les annonce séparément : dire « conforme à la fiche
+ * n°21 » pour une formation qui n'y figure pas serait inexact.
+ *
+ * ⚠ CAP Métallier : coefficient confirmé par le tableau national RS2021 (fiche
+ * n°11, groupe 25 « Mécanique, électricité, électronique », intitulé officiel
+ * « SERRURIER METALLIER »). Cette source a cinq ans : à reconfirmer auprès du
+ * CIO / DRAIO pour la campagne 2026 si une fiche n°21 à jour le réintègre. */
+const TABLEAU_NATIONAL = {
+  "CAP Métallier": [4, 6, 3, 4, 3, 2, 8],
+};
+
+/* Formations absentes de TOUTE source vérifiable (fiche n°21 ET tableau
+ * national) : aucune pour l'instant. Une telle formation doit porter une
+ * mention « à vérifier » visible par l'élève. */
 const ABSENTES_DE_LA_FICHE = [];
 
 /* Coefficients des FAMILLES DE MÉTIERS (lignes « 2NDPRO … 2NDE COMMUNE (FM) »).
@@ -163,21 +173,24 @@ let echecs = 0;
 const OK = (m) => { if (process.env.VERBEUX) console.log("  \u2713 " + m); };
 const KO = (m) => { console.error("  \u2717 " + m); echecs++; };
 
-console.log("Coefficients Affelnet \u2014 contr\u00f4le contre la fiche technique n\u00b021\n");
+console.log("Coefficients Affelnet \u2014 contr\u00f4le contre la fiche n\u00b021 + le tableau national (RS2021)\n");
 
 console.log("\u2500\u2500 FORMATIONS \u2500\u2500");
-let nb = 0, absentes = [];
+let nb = 0, absentes = [], parNational = [];
 for (const cle in DOMAINS) {
   for (const f of DOMAINS[cle].formations) {
     nb++;
     if (ABSENTES_DE_LA_FICHE.includes(f.nom)) {
       absentes.push(f.nom);
-      if (!f.aVerifier) KO(f.nom + " est absente de la fiche n\u00b021 et ne porte pas de mention \u00ab \u00e0 v\u00e9rifier \u00bb.");
+      if (!f.aVerifier) KO(f.nom + " est absente de toute source et ne porte pas de mention \u00ab \u00e0 v\u00e9rifier \u00bb.");
       continue;
     }
-    const attendu = FICHE_21[f.nom];
+    // Deux sources possibles : la fiche n°21 académique, sinon le tableau
+    // national. On mémorise LAQUELLE a servi, pour une conclusion honnête.
+    const attendu = FICHE_21[f.nom] || TABLEAU_NATIONAL[f.nom];
+    const source  = FICHE_21[f.nom] ? "fiche n\u00b021" : (TABLEAU_NATIONAL[f.nom] ? "tableau national" : null);
     if (!attendu) {
-      KO(f.nom + " n'est pas dans la fiche n\u00b021. Ajoute-la ici, ou d\u00e9clare-la absente.");
+      KO(f.nom + " n'est ni dans la fiche n\u00b021 ni dans le tableau national. Ajoute-la, ou d\u00e9clare-la absente.");
       continue;
     }
     if (!eq(f.coeffs, attendu)) {
@@ -185,14 +198,18 @@ for (const cle in DOMAINS) {
         ? "  \u2190 identique aux coeffs du domaine : l'erreur classique"
         : "";
       KO(f.nom + "\n      base       [" + f.coeffs.join(",") + "]" + memeQueDomaine +
-         "\n      fiche n\u00b021 [" + attendu.join(",") + "]");
+         "\n      " + source + " [" + attendu.join(",") + "]");
     } else {
-      OK(f.nom);
+      if (source === "tableau national") parNational.push(f.nom);
+      OK(f.nom + " (" + source + ")");
     }
   }
 }
 console.log("  " + (nb - echecs - absentes.length) + " formation(s) conforme(s) sur " + nb);
-if (absentes.length) console.log("  " + absentes.length + " absente(s) de la fiche, signal\u00e9e(s) \u00e0 l'\u00e9l\u00e8ve : " + absentes.join(", "));
+if (parNational.length) {
+  console.log("  dont " + parNational.length + " via le TABLEAU NATIONAL (hors fiche n\u00b021 2026, \u00e0 reconfirmer) : " + parNational.join(", "));
+}
+if (absentes.length) console.log("  " + absentes.length + " absente(s) de toute source, signal\u00e9e(s) \u00e0 l'\u00e9l\u00e8ve : " + absentes.join(", "));
 
 console.log("\n\u2500\u2500 COEFFICIENTS DES FAMILLES (2de commune) \u2500\u2500");
 for (const cle in FAMILLES) {
@@ -344,5 +361,5 @@ if (echecs) {
   console.error("\u2717 " + echecs + " coefficient(s) faux. Un \u00e9l\u00e8ve calculerait mal ses chances.");
   process.exit(1);
 }
-console.log("\u2713 Tous les coefficients correspondent \u00e0 la fiche technique n\u00b021.");
+console.log("\u2713 Tous les coefficients correspondent \u00e0 la fiche n\u00b021, ou au tableau national RS2021 pour les rares formations absentes de la fiche.");
 console.log("  (VERBEUX=1 pour le d\u00e9tail.)");
